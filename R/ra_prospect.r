@@ -44,9 +44,9 @@
 #' particular order, however it is necessary that they be labelled correctly and contain the information below:
 #' \describe{
 #'  \item{\code{"subjID"}}{A unique identifier for each subject within data-set to be analyzed.}
-#'  \item{\code{"riskyGain"}}{type here}
-#'  \item{\code{"riskyLoss"}}{type here}
-#'  \item{\code{"safeOption"}}{type here}
+#'  \item{\code{"riskyGain"}}{Possible gain outcome of a risky option.}
+#'  \item{\code{"riskyLoss"}}{Possible loss outcome of a risky option.}
+#'  \item{\code{"safeOption"}}{Guaranteed amount of a safe option.}
 #' } 
 #' \strong{*}Note: The data.txt file may contain other columns of data (e.g. "Reaction_Time", "trial_number", etc.), but only the data with the column
 #' names listed above will be used for analysis/modeling. As long as the columns above are present and labelled correctly,
@@ -85,9 +85,9 @@
 ra_prospect <- function(data     = NULL,
                     niter    = 4000, 
                     nwarmup  = 1000, 
-                    nchain  = 1,
+                    nchain   = 1,
                     ncore    = 1, 
-                    nthin = 1,
+                    nthin    = 1,
                     inits    = "random",  
                     indPars  = "mean", 
                     saveDir  = NULL,
@@ -246,9 +246,9 @@ ra_prospect <- function(data     = NULL,
                             median(lambda[, i]), 
                             median(tau[, i]) )
     } else if (indPars=="mode") {
-      allIndPars[i, ] <- c( modeest::mlv(rho[, i], method="shorth")[1], 
-                            modeest::mlv(lambda[, i], method="shorth")[1],
-                            modeest::mlv(tau[, i], method="shorth")[1] )
+      allIndPars[i, ] <- c( as.numeric(modeest::mlv(rho[, i], method="shorth")[1]), 
+                            as.numeric(modeest::mlv(lambda[, i], method="shorth")[1]),
+                            as.numeric(modeest::mlv(tau[, i], method="shorth")[1]) )
     }   
   }  
   

@@ -39,13 +39,13 @@ model {
   # gng_m4: RW(rew/pun) + noise + bias + pi model (M5 in Cavanagh et al 2013 J Neuro)
   # hyper parameters
   mu_p  ~ normal(0, 1.0); 
-  sigma ~ cauchy(0,5);
+  sigma ~ cauchy(0, 5.0);
   
   # individual parameters w/ Matt trick
   xi_p  ~ normal(0, 1.0);   
   ep_p  ~ normal(0, 1.0);   
-  b_p   ~ normal(0, 10.0); 
-  pi_p  ~ normal(0, 5.0); 
+  b_p   ~ normal(0, 1.0); 
+  pi_p  ~ normal(0, 1.0); 
   rho_p ~ normal(0, 1.0);
 
   for (i in 1:N) {

@@ -84,9 +84,9 @@
 prl_fictitious <- function(data     = NULL,
                            niter    = 3000, 
                            nwarmup  = 1000, 
-                           nchain  = 1,
+                           nchain   = 1,
                            ncore    = 1, 
-                           nthin = 1,
+                           nthin    = 1,
                            inits    = "random",  
                            indPars  = "mean", 
                            saveDir  = NULL,
@@ -245,9 +245,9 @@ prl_fictitious <- function(data     = NULL,
                             median(alpha[, i]), 
                             median(beta[, i]) )
     } else if (indPars=="mode") {
-      allIndPars[i, ] <- c( modeest::mlv(eta[, i], method="shorth")[1],
-                            modeest::mlv(alpha[, i], method="shorth")[1],
-                            modeest::mlv(beta[, i], method="shorth")[1] )
+      allIndPars[i, ] <- c( as.numeric(modeest::mlv(eta[, i], method="shorth")[1]),
+                            as.numeric(modeest::mlv(alpha[, i], method="shorth")[1]),
+                            as.numeric(modeest::mlv(beta[, i], method="shorth")[1]) )
     }
   }
   

@@ -85,9 +85,9 @@
 gng_m4 <- function(data     = NULL,
                    niter    = 5000, 
                    nwarmup  = 2000, 
-                   nchain  = 1,
+                   nchain   = 1,
                    ncore    = 1, 
-                   nthin = 1,
+                   nthin    = 1,
                    inits    = "fixed",  
                    indPars  = "mean", 
                    saveDir  = NULL,
@@ -254,12 +254,12 @@ gng_m4 <- function(data     = NULL,
                             median(rhoRew[, i]),
                             median(rhoPun[, i]) )
     } else if (indPars=="mode") {
-      allIndPars[i, ] <- c( modeest::mlv(xi[, i], method="shorth")[1],
-                            modeest::mlv(ep[, i], method="shorth")[1],
-                            modeest::mlv(b[, i], method="shorth")[1],
-                            modeest::mlv(pi[, i], method="shorth")[1],
-                            modeest::mlv(rhoRew[, i], method="shorth")[1],
-                            modeest::mlv(rhoPun[, i], method="shorth")[1])
+      allIndPars[i, ] <- c( as.numeric(modeest::mlv(xi[, i], method="shorth")[1]),
+                            as.numeric(modeest::mlv(ep[, i], method="shorth")[1]),
+                            as.numeric(modeest::mlv(b[, i], method="shorth")[1]),
+                            as.numeric(modeest::mlv(pi[, i], method="shorth")[1]),
+                            as.numeric(modeest::mlv(rhoRew[, i], method="shorth")[1]),
+                            as.numeric(modeest::mlv(rhoPun[, i], method="shorth")[1]) )
     }
   }
   

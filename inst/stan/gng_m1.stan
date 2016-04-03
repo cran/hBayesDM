@@ -33,7 +33,7 @@ model {
   # gng_m1: RW + noise model in Guitart-Masip et al 2012
   # hyper parameters
   mu_p  ~ normal(0, 1.0); 
-  sigma ~ cauchy(0,5);
+  sigma ~ cauchy(0, 5.0);
   
   # individual parameters w/ Matt trick
   xi_p  ~ normal(0, 1.0);   

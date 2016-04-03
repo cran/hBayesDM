@@ -36,12 +36,12 @@ model {
   # gng_m2: RW + noise + bias model in Guitart-Masip et al 2012
   # hyper parameters
   mu_p  ~ normal(0, 1.0); 
-  sigma ~ cauchy(0,5);
+  sigma ~ cauchy(0, 5.0);
   
   # individual parameters w/ Matt trick
   xi_p  ~ normal(0, 1.0);   
   ep_p  ~ normal(0, 1.0);   
-  b_p   ~ normal(0, 10.0);   
+  b_p   ~ normal(0, 1.0);   
   rho_p ~ normal(0, 1.0);
 
   for (i in 1:N) {

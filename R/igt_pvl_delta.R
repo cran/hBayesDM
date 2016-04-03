@@ -86,9 +86,9 @@
 igt_pvl_delta <- function(data     = NULL,
                           niter    = 3000, 
                           nwarmup  = 1000,
-                          nchain  = 1,
+                          nchain   = 1,
                           ncore    = 1, 
-                          nthin = 1,
+                          nthin    = 1,
                           inits    = "random",
                           indPars  = "mean", 
                           payscale = 100,
@@ -259,10 +259,10 @@ igt_pvl_delta <- function(data     = NULL,
                             median(cons[, i]), 
                             median(lambda[, i]) )
     } else if (indPars=="mode") {
-      allIndPars[i, ] <- c( modeest::mlv(A[, i], method="shorth")[1],
-                            modeest::mlv(alpha[, i], method="shorth")[1],
-                            modeest::mlv(cons[, i], method="shorth")[1],
-                            modeest::mlv(lambda[, i], method="shorth")[1] )
+      allIndPars[i, ] <- c( as.numeric(modeest::mlv(A[, i], method="shorth")[1]),
+                            as.numeric(modeest::mlv(alpha[, i], method="shorth")[1]),
+                            as.numeric(modeest::mlv(cons[, i], method="shorth")[1]),
+                            as.numeric(modeest::mlv(lambda[, i], method="shorth")[1]) )
     }
   }
   allIndPars           <- cbind(allIndPars, subjList)

@@ -88,9 +88,9 @@
 dd_hyperbolic <- function(data     = NULL,
                           niter    = 3000, 
                           nwarmup  = 1000, 
-                          nchain  = 1,
+                          nchain   = 1,
                           ncore    = 1, 
-                          nthin = 1,
+                          nthin    = 1,
                           inits    = "random",  
                           indPars  = "mean", 
                           saveDir  = NULL,
@@ -251,8 +251,8 @@ dd_hyperbolic <- function(data     = NULL,
       allIndPars[i, ] <- c( median(k[, i]), 
                             median(beta[, i]) )
     } else if (indPars=="mode") {
-      allIndPars[i, ] <- c( modeest::mlv(k[, i], method="shorth")[1],
-                            modeest::mlv(beta[, i], method="shorth")[1] )
+      allIndPars[i, ] <- c( as.numeric(modeest::mlv(k[, i], method="shorth")[1]),
+                            as.numeric(modeest::mlv(beta[, i], method="shorth")[1]) )
     }
   }
   

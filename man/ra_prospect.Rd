@@ -57,9 +57,9 @@ represent variables. For the Risk Aversion Task, there should be four columns of
 particular order, however it is necessary that they be labelled correctly and contain the information below:
 \describe{
  \item{\code{"subjID"}}{A unique identifier for each subject within data-set to be analyzed.}
- \item{\code{"riskyGain"}}{type here}
- \item{\code{"riskyLoss"}}{type here}
- \item{\code{"safeOption"}}{type here}
+ \item{\code{"riskyGain"}}{Possible gain outcome of a risky option.}
+ \item{\code{"riskyLoss"}}{Possible loss outcome of a risky option.}
+ \item{\code{"safeOption"}}{Guaranteed amount of a safe option.}
 } 
 \strong{*}Note: The data.txt file may contain other columns of data (e.g. "Reaction_Time", "trial_number", etc.), but only the data with the column
 names listed above will be used for analysis/modeling. As long as the columns above are present and labelled correctly,
