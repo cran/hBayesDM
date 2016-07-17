@@ -6,6 +6,7 @@
 #' @param Title Character value containing the main title for the plot
 #' @param xLab Character value containing the x label 
 #' @param yLab Character value containing the y label 
+#' @param fontSize Integer value specifying the font size to be used for the plot labels
 #' @param binSize Integer value specifyin ghow wide the bars on the histogram should be. Defaults to 30.
 #' @param ... Arguments that can be additionally supplied to geom_histogram
 #' 
@@ -20,6 +21,7 @@ plotHDI <- function(sample   = NULL,
                     Title    = NULL, 
                     xLab     = "Value", 
                     yLab     = "Density",
+                    fontSize = NULL,
                     binSize  = 30,
                     ...) {
   
@@ -31,9 +33,14 @@ plotHDI <- function(sample   = NULL,
   
   h1 <- ggplot(sample_df, aes(x=sample)) + 
                ggplot2::theme_bw() +
-               geom_histogram(aes(y=..density..), colour="black", fill="white", bins = binSize, ...) + 
+               geom_histogram(aes(y=..density..), colour="black", fill="grey", bins = binSize, ...) + 
                ggtitle(Title) + xlab(xLab) + ylab(yLab) +
-               geom_segment( aes(x = HDI[1], y = 0, xend = HDI[2], yend = 0), size=1.5, colour="red" ) 
+               geom_segment( aes(x = HDI[1], y = 0, xend = HDI[2], yend = 0), size=1.5, colour="red" ) +
+               theme(axis.text.x=ggplot2::element_text(size=fontSize)) +
+               theme(axis.text.y=ggplot2::element_text(size=fontSize)) +
+               theme(axis.title.y=ggplot2::element_text(size=fontSize)) + 
+               theme(axis.title.x=ggplot2::element_text(size=fontSize)) +
+               theme(plot.title=ggplot2::element_text(size=fontSize)) 
 
   print( paste0(credMass*100, "% Highest Density Interval (HDI):") )
   print( paste0( "Lower bound=", round(HDI[1], 4), ", Upper bound=", round(HDI[2], 4)))

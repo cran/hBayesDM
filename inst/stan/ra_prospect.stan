@@ -22,9 +22,9 @@ transformed parameters {
   vector<lower=0>[N] tau;
      
   for (i in 1:N) {
-    rho[i]     <- 2 * Phi_approx( mu_p[1] + sigma[1] * rho_p[i] );
-    lambda[i]  <- 5 * Phi_approx( mu_p[2] + sigma[2] * lambda_p[i] );
-    tau[i]     <- 5 * Phi_approx( mu_p[3] + sigma[3] * tau_p[i] );
+    rho[i]     = 2 * Phi_approx( mu_p[1] + sigma[1] * rho_p[i] );
+    lambda[i]  = 5 * Phi_approx( mu_p[2] + sigma[2] * lambda_p[i] );
+    tau[i]     = 5 * Phi_approx( mu_p[3] + sigma[3] * tau_p[i] );
   }
 }
 model {
@@ -44,9 +44,10 @@ model {
       real evGamble;  # they are left as arrays as an example for RL models.
       real pGamble;
       
-      evSafe   <- pow(cert[i,t], rho[i]);    
-      evGamble <- 0.5 * (pow(gain[i,t], rho[i]) - lambda[i] * pow(loss[i,t], rho[i]) );
-      pGamble  <- inv_logit( tau[i] * (evGamble - evSafe) );
+      # loss[i,t]=absolute amount of loss (pre-converted in R)
+      evSafe   = pow(cert[i,t], rho[i]);    
+      evGamble = 0.5 * (pow(gain[i,t], rho[i]) - lambda[i] * pow(loss[i,t], rho[i]) ); 
+      pGamble  = inv_logit( tau[i] * (evGamble - evSafe) );
       gamble[i,t] ~ bernoulli( pGamble );
     }
   }
@@ -58,22 +59,22 @@ generated quantities {
   real<lower=0, upper=5> mu_tau;
   real log_lik[N];
 
-  mu_rho    <- 2 * Phi(mu_p[1]);
-  mu_lambda <- 5 * Phi(mu_p[2]);
-  mu_tau  <- 5 * Phi(mu_p[3]);
+  mu_rho    = 2 * Phi(mu_p[1]);
+  mu_lambda = 5 * Phi(mu_p[2]);
+  mu_tau    = 5 * Phi(mu_p[3]);
 
   { # local section, this saves time and space
     for (i in 1:N) {
-      log_lik[i] <- 0;
+      log_lik[i] = 0;
       for (t in 1:Tsubj[i]) {
         real evSafe;    # evSafe, evGamble, pGamble can be a scalar to save memory and increase speed. 
         real evGamble;  # they are left as arrays as an example for RL models.
         real pGamble;
         
-        evSafe     <- pow(cert[i,t], rho[i]);    
-        evGamble   <- 0.5 * (pow(gain[i,t], rho[i]) - lambda[i] * pow(fabs(loss[i,t]), rho[i]) );
-        pGamble    <- inv_logit( tau[i] * (evGamble - evSafe) );
-        log_lik[i] <- log_lik[i] + bernoulli_log( gamble[i,t], pGamble );
+        evSafe     = pow(cert[i,t], rho[i]);    
+        evGamble   = 0.5 * (pow(gain[i,t], rho[i]) - lambda[i] * pow(fabs(loss[i,t]), rho[i]) );
+        pGamble    = inv_logit( tau[i] * (evGamble - evSafe) );
+        log_lik[i] = log_lik[i] + bernoulli_lpmf( gamble[i,t] | pGamble );
       }
     }
   }

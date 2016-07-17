@@ -1,4 +1,4 @@
-#' Risk Aversion Task (Sokol-Hessner, 2009)
+#' Risk Aversion Task 
 #' 
 #' @description 
 #' Hierarchical Bayesian Modeling of the Risk Aversion Task with the following parameters: "rho" (risk aversion), "lambda" (loss aversion), and "tau" (inverse temp).
@@ -6,7 +6,7 @@
 #' \strong{MODEL:}
 #' Prospect Theory (Sokol-Hessner et al., 2009, PNAS)
 #' 
-#' @param data A .txt file containing the data to be modeled. Data columns should be labelled as follows: "subjID", "riskyGain", "riskyLoss", and "safeOption". See \bold{Details} below for more information. 
+#' @param data A .txt file containing the data to be modeled. Data columns should be labelled as follows: "subjID", "gain", "loss", "cert", and "gamble". See \bold{Details} below for more information. 
 #' @param niter Number of iterations, including warm-up.
 #' @param nwarmup Number of iterations used for warm-up only.
 #' @param nchain Number of chains to be run.
@@ -16,15 +16,20 @@
 #' @param indPars Character value specifying how to summarize individual parameters. Current options are: "mean", "median", or "mode".
 #' @param saveDir Path to directory where .RData file of model output (\code{modelData}) can be saved. Leave blank if not interested.
 #' @param email Character value containing email address to send notification of completion. Leave blank if not interested. 
-#' 
-#' @return \code{modelData}  A class \code{'hBayesDM'} object with the following components:
+#' @param modelRegressor Exporting model-based regressors? TRUE or FALSE. Currently not available for this model.
+#' @param adapt_delta Floating point number representing the target acceptance probability of a new sample in the MCMC chain. Must be between 0 and 1. See \bold{Details} below.
+#' @param stepsize Integer value specifying the size of each leapfrog step that the MCMC sampler can take on each new iteration. See \bold{Details} below.
+#' @param max_treedepth Integer value specifying how many leapfrog steps that the MCMC sampler can take on each new iteration. See \bold{Details} below. 
+#'  
+#' @return \code{modelData}  A class \code{"hBayesDM"} object with the following components:
 #' \describe{
-#'  \item{\code{model}}{Character string with the name of the model ("ra_prospect").}
-#'  \item{\code{allIndPars}}{\code{'data.frame'} containing the summarized parameter 
-#'    values (as specified by \code{'indPars'}) for each subject.}
-#'  \item{\code{parVals}}{A \code{'list'} where each element contains posterior samples
+#'  \item{\code{model}}{Character string with the name of the model (\code{"ra_prospect"}).}
+#'  \item{\code{allIndPars}}{\code{"data.frame"} containing the summarized parameter 
+#'    values (as specified by \code{"indPars"}) for each subject.}
+#'  \item{\code{parVals}}{A \code{"list"} where each element contains posterior samples
 #'    over different model parameters. }
-#'  \item{\code{fit}}{A class \code{'stanfit'} object containing the fitted model.}
+#'  \item{\code{fit}}{A class \code{"stanfit"} object containing the fitted model.}
+#'  \item{\code{rawdata}}{\code{"data.frame"} containing the raw data used to fit the model, as specified by the user.}
 #' }
 #' 
 #' @importFrom rstan stan rstan_options extract
@@ -44,9 +49,10 @@
 #' particular order, however it is necessary that they be labelled correctly and contain the information below:
 #' \describe{
 #'  \item{\code{"subjID"}}{A unique identifier for each subject within data-set to be analyzed.}
-#'  \item{\code{"riskyGain"}}{Possible gain outcome of a risky option.}
-#'  \item{\code{"riskyLoss"}}{Possible loss outcome of a risky option.}
-#'  \item{\code{"safeOption"}}{Guaranteed amount of a safe option.}
+#'  \item{\code{"gain"}}{Possible (50\%) gain outcome of a risky option (e.g. 9).}
+#'  \item{\code{"loss"}}{Possible (50\%) loss outcome of a risky option (e.g. 5, or -5).}
+#'  \item{\code{"cert"}}{Guaranteed amount of a safe option. "cert" is assumed to be zero or greater than zero.}
+#'  \item{\code{"gamble"}}{If gamble was taken, gamble == 1, else gamble == 0.}
 #' } 
 #' \strong{*}Note: The data.txt file may contain other columns of data (e.g. "Reaction_Time", "trial_number", etc.), but only the data with the column
 #' names listed above will be used for analysis/modeling. As long as the columns above are present and labelled correctly,
@@ -55,20 +61,37 @@
 #' \strong{nwarmup} is a numerical value that specifies how many MCMC samples should not be stored upon the 
 #' beginning of each chain. For those familiar with Bayesian methods, this value is equivalent to a burn-in sample. 
 #' Due to the nature of MCMC sampling, initial values (where the sampling chain begins) can have a heavy influence 
-#' on the generated posterior distributions. The \strong{nwarmup} argument can be set to a high number in order to curb the 
+#' on the generated posterior distributions. The \code{nwarmup} argument can be set to a high number in order to curb the 
 #' effects that initial values have on the resulting posteriors.  
 #' 
 #' \strong{nchain} is a numerical value that specifies how many chains (i.e. independent sampling sequences) should be
 #' used to draw samples from the posterior distribution. Since the posteriors are generated from a sampling 
 #' process, it is good practice to run multiple chains to ensure that a representative posterior is attained. When
 #' sampling is completed, the multiple chains may be checked for convergence with the \code{plot(myModel, type = "trace")}
-#' command. The chains should resemble a "furry caterpillar". 
+#' command. The chains should resemble a "furry caterpillar".
 #' 
 #' \strong{nthin} is a numerical value that specifies the "skipping" behavior of the MCMC samples being chosen 
-#' to generate the posterior distributions. By default, \strong{nthin} is equal to 1, hence every sample is used to 
-#' generate the posterior.
+#' to generate the posterior distributions. By default, \code{nthin} is equal to 1, hence every sample is used to 
+#' generate the posterior. 
+#' 
+#' \strong{Contol Parameters:} adapt_delta, stepsize, and max_treedepth are advanced options that give the user more control 
+#' over Stan's MCMC sampler. The Stan creators recommend that only advanced users change the default values, as alterations
+#' can profoundly change the sampler's behavior. Refer to Hoffman & Gelman (2014, Journal of Machine Learning Research) for 
+#' more information on the functioning of the sampler control parameters. One can also refer to section 58.2 of the  
+#' \href{http://mc-stan.org/documentation/}{Stan User's Manual} for a less technical description of these arguments. 
 #' 
 #' @export 
+#' 
+#' @references 
+#' Hoffman, M. D., & Gelman, A. (2014). The No-U-turn sampler: adaptively setting path lengths in Hamiltonian Monte Carlo. The 
+#' Journal of Machine Learning Research, 15(1), 1593-1623.
+#' 
+#' Sokol-Hessner, P., Hsu, M., Curley, N. G., Delgado, M. R., Camerer, C. F., Phelps, E. A., & Smith, E. E. (2009). Thinking like 
+#' a Trader Selectively Reduces Individuals' Loss Aversion. Proceedings of the National Academy of Sciences of the United States 
+#' of America, 106(13), 5035-5040. http://doi.org/10.2307/40455144?ref=search-gateway:1f452c8925000031ef87ca756455c9e3
+#' 
+#' @seealso 
+#' We refer users to our in-depth tutorial for an example of using hBayesDM: \url{https://rpubs.com/CCSL/hBayesDM}
 #' 
 #' @examples 
 #' \dontrun{
@@ -82,19 +105,27 @@
 #' printFit(output)
 #' }
 
-ra_prospect <- function(data     = NULL,
-                    niter    = 4000, 
-                    nwarmup  = 1000, 
-                    nchain   = 1,
-                    ncore    = 1, 
-                    nthin    = 1,
-                    inits    = "random",  
-                    indPars  = "mean", 
-                    saveDir  = NULL,
-                    email    = NULL) {
+ra_prospect <- function(data          = "choose",
+                        niter         = 4000, 
+                        nwarmup       = 1000, 
+                        nchain        = 1,
+                        ncore         = 1, 
+                        nthin         = 1,
+                        inits         = "random",  
+                        indPars       = "mean", 
+                        saveDir       = NULL,
+                        email         = NULL,
+                        modelRegressor= FALSE,
+                        adapt_delta   = 0.8,
+                        stepsize      = 1,
+                        max_treedepth = 10 ) {
   
   # Path to .stan model file
-  modelPath <- system.file("stan", "ra_prospect.stan", package="hBayesDM")
+  if (modelRegressor) { # model regressors (for model-based neuroimaging, etc.)
+    stop("** Model-based regressors are not available for this model **\n")
+  } else {
+    modelPath <- system.file("stan", "ra_prospect.stan", package="hBayesDM")
+  }
   
   # To see how long computations take
   startTime <- Sys.time()    
@@ -102,6 +133,8 @@ ra_prospect <- function(data     = NULL,
   # For using example data
   if (data=="example") {
     data <- system.file("extdata", "ra_exampleData.txt", package = "hBayesDM")
+  } else if (data=="choose") {
+    data <- file.choose()
   }
   
   # Load data
@@ -117,7 +150,8 @@ ra_prospect <- function(data     = NULL,
   
   # Specify the number of parameters and parameters of interest 
   numPars <- 3
-  POI     <- c("mu_rho", "mu_lambda", "mu_tau", 
+  POI     <- c("mu_rho", "mu_lambda", "mu_tau",
+               "sigma",
                "rho" , "lambda", "tau",
                "log_lik")
   
@@ -189,7 +223,7 @@ ra_prospect <- function(data     = NULL,
     genInitList <- function() {
       list(
         mu_p     = c( qnorm( inits_fixed[1]/2 ), qnorm( inits_fixed[2]/5 ), qnorm( inits_fixed[3]/5 ) ),
-        sigma    = c(1, 1, 1),
+        sigma    = c(1.0, 1.0, 1.0),
         rho_p    = rep(qnorm( inits_fixed[1]/2 ), numSubjs),
         lambda_p = rep(qnorm( inits_fixed[2]/5 ), numSubjs),
         tau_p    = rep(qnorm( inits_fixed[3]/5 ), numSubjs) 
@@ -224,7 +258,10 @@ ra_prospect <- function(data     = NULL,
                      init   = genInitList, 
                      iter   = niter, 
                      chains = nchain,
-                     thin   = nthin)
+                     thin   = nthin,
+                     control = list(adapt_delta   = adapt_delta, 
+                                    max_treedepth = max_treedepth, 
+                                    stepsize      = stepsize) )
   
   # Extract the Stan fit object
   parVals <- rstan::extract(fit, permuted=T)
@@ -233,6 +270,7 @@ ra_prospect <- function(data     = NULL,
   lambda <- parVals$lambda
   tau    <- parVals$tau
   
+  # Individual parameters (e.g., individual posterior means)
   allIndPars <- array(NA, c(numSubjs, numPars))
   allIndPars <- as.data.frame(allIndPars)
   
@@ -259,8 +297,8 @@ ra_prospect <- function(data     = NULL,
                             "subjID")
 
   # Wrap up data into a list
-  modelData        <- list(modelName, allIndPars, parVals, fit)
-  names(modelData) <- c("model", "allIndPars","parVals","fit")    
+  modelData        <- list(modelName, allIndPars, parVals, fit, rawdata)
+  names(modelData) <- c("model", "allIndPars", "parVals", "fit", "rawdata")    
   class(modelData) <- "hBayesDM"
   
   # Total time of computations
@@ -290,5 +328,3 @@ ra_prospect <- function(data     = NULL,
   
   return(modelData)
 }
-  
-  

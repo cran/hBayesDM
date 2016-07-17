@@ -8,15 +8,15 @@ data {
 }
 transformed data {
   vector[4] initV;
-  initV  <- rep_vector(0.0, 4);
+  initV  = rep_vector(0.0, 4);
 }
 parameters {
   # declare as vectors for vectorizing
   vector[3] mu_p;  
   vector<lower=0>[3] sigma; 
-  vector[N] xi_p; # noise 
-  vector[N] ep_p; # learning rate 
-  vector[N] rho_p; # rho, inv temp 
+  vector[N] xi_pr;          # noise 
+  vector[N] ep_pr;          # learning rate 
+  vector[N] rho_pr;         # rho, inv temp 
 }
 transformed parameters{
   vector<lower=0,upper=1>[N] xi;
@@ -24,21 +24,21 @@ transformed parameters{
   vector<lower=0>[N] rho;
      
   for (i in 1:N) {
-    xi[i]  <- Phi_approx( mu_p[1] + sigma[1] * xi_p[i] );
-    ep[i]  <- Phi_approx( mu_p[2] + sigma[2] * ep_p[i] );
+    xi[i]  = Phi_approx( mu_p[1] + sigma[1] * xi_pr[i] );
+    ep[i]  = Phi_approx( mu_p[2] + sigma[2] * ep_pr[i] );
   }
-  rho <- exp( mu_p[3] + sigma[3] * rho_p );
+  rho = exp( mu_p[3] + sigma[3] * rho_pr );
 }
 model {  
-  # gng_m1: RW + noise model in Guitart-Masip et al 2012
+# gng_m1: RW + noise model in Guitart-Masip et al 2012
   # hyper parameters
   mu_p  ~ normal(0, 1.0); 
   sigma ~ cauchy(0, 5.0);
   
   # individual parameters w/ Matt trick
-  xi_p  ~ normal(0, 1.0);   
-  ep_p  ~ normal(0, 1.0);   
-  rho_p ~ normal(0, 1.0);
+  xi_pr  ~ normal(0, 1.0);   
+  ep_pr  ~ normal(0, 1.0);   
+  rho_pr ~ normal(0, 1.0);
 
   for (i in 1:N) {
     vector[4] wv_g;  # action wegith for go
@@ -47,23 +47,23 @@ model {
     vector[4] qv_ng; # Q value for nogo
     vector[4] pGo;   # prob of go (press) 
 
-    wv_g  <- initV;
-    wv_ng <- initV;
-    qv_g  <- initV;
-    qv_ng <- initV;
+    wv_g  = initV;
+    wv_ng = initV;
+    qv_g  = initV;
+    qv_ng = initV;
   
     for (t in 1:Tsubj[i])  {
-      wv_g[ cue[i,t] ]  <- qv_g[ cue[i,t] ];
-      wv_ng[ cue[i,t] ] <- qv_ng[ cue[i,t] ];  # qv_ng is always equal to wv_ng (regardless of action)      
-      pGo[ cue[i,t] ]   <- inv_logit( wv_g[ cue[i,t] ] - wv_ng[ cue[i,t] ] ); 
-      pGo[ cue[i,t] ]   <- pGo[ cue[i,t] ] * (1 - xi[i]) + xi[i]/2;  # noise
+      wv_g[ cue[i,t] ]  = qv_g[ cue[i,t] ];
+      wv_ng[ cue[i,t] ] = qv_ng[ cue[i,t] ];  # qv_ng is always equal to wv_ng (regardless of action)      
+      pGo[ cue[i,t] ]   = inv_logit( wv_g[ cue[i,t] ] - wv_ng[ cue[i,t] ] ); 
+      pGo[ cue[i,t] ]   = pGo[ cue[i,t] ] * (1 - xi[i]) + xi[i]/2;  # noise
       pressed[i,t] ~ bernoulli( pGo[ cue[i,t] ] );
       
       # update action values
       if (pressed[i,t]) { # update go value 
-        qv_g[ cue[i,t] ]  <- qv_g[ cue[i,t] ] + ep[i] * (rho[i] * outcome[i,t] - qv_g[ cue[i,t] ]);
+        qv_g[ cue[i,t] ]  = qv_g[ cue[i,t] ] + ep[i] * (rho[i] * outcome[i,t] - qv_g[ cue[i,t] ]);
       } else { # update no-go value  
-        qv_ng[ cue[i,t] ] <- qv_ng[ cue[i,t] ] + ep[i] * (rho[i] * outcome[i,t] - qv_ng[ cue[i,t] ]);  
+        qv_ng[ cue[i,t] ] = qv_ng[ cue[i,t] ] + ep[i] * (rho[i] * outcome[i,t] - qv_ng[ cue[i,t] ]);  
       }  
     } # end of t loop
   } # end of i loop
@@ -74,9 +74,9 @@ generated quantities {
   real<lower=0> mu_rho;
   real log_lik[N];
   
-  mu_xi  <- Phi_approx(mu_p[1]);
-  mu_ep  <- Phi_approx(mu_p[2]);
-  mu_rho <- exp(mu_p[3]); 
+  mu_xi  = Phi_approx(mu_p[1]);
+  mu_ep  = Phi_approx(mu_p[2]);
+  mu_rho = exp(mu_p[3]); 
   
   { # local section, this saves time and space
     for (i in 1:N) {
@@ -86,25 +86,25 @@ generated quantities {
       vector[4] qv_ng; # Q value for nogo
       vector[4] pGo;   # prob of go (press) 
   
-      wv_g  <- initV;
-      wv_ng <- initV;
-      qv_g  <- initV;
-      qv_ng <- initV;
+      wv_g  = initV;
+      wv_ng = initV;
+      qv_g  = initV;
+      qv_ng = initV;
     
-      log_lik[i] <- 0;
+      log_lik[i] = 0;
 
       for (t in 1:T)  {
-        wv_g[ cue[i,t] ]  <- qv_g[ cue[i,t] ];
-        wv_ng[ cue[i,t] ] <- qv_ng[ cue[i,t] ];  # qv_ng is always equal to wv_ng (regardless of action)      
-        pGo[ cue[i,t] ]   <- inv_logit( wv_g[ cue[i,t] ] - wv_ng[ cue[i,t] ] ); 
-        pGo[ cue[i,t] ]   <- pGo[ cue[i,t] ] * (1 - xi[i]) + xi[i]/2;  # noise
-        log_lik[i] <- log_lik[i] + bernoulli_log( pressed[i,t], pGo[ cue[i,t] ] );
+        wv_g[ cue[i,t] ]  = qv_g[ cue[i,t] ];
+        wv_ng[ cue[i,t] ] = qv_ng[ cue[i,t] ];  # qv_ng is always equal to wv_ng (regardless of action)      
+        pGo[ cue[i,t] ]   = inv_logit( wv_g[ cue[i,t] ] - wv_ng[ cue[i,t] ] ); 
+        pGo[ cue[i,t] ]   = pGo[ cue[i,t] ] * (1 - xi[i]) + xi[i]/2;  # noise
+        log_lik[i] = log_lik[i] + bernoulli_lpmf( pressed[i,t] | pGo[ cue[i,t] ] );
         
         # update action values
         if (pressed[i,t]) { # update go value 
-          qv_g[ cue[i,t] ]  <- qv_g[ cue[i,t] ] + ep[i] * (rho[i] * outcome[i,t] - qv_g[ cue[i,t] ]);
+          qv_g[ cue[i,t] ]  = qv_g[ cue[i,t] ] + ep[i] * (rho[i] * outcome[i,t] - qv_g[ cue[i,t] ]);
         } else { # update no-go value  
-          qv_ng[ cue[i,t] ] <- qv_ng[ cue[i,t] ] + ep[i] * (rho[i] * outcome[i,t] - qv_ng[ cue[i,t] ]);  
+          qv_ng[ cue[i,t] ] = qv_ng[ cue[i,t] ] + ep[i] * (rho[i] * outcome[i,t] - qv_ng[ cue[i,t] ]);  
         }  
       } # end of t loop
     } # end of i loop

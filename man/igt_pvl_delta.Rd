@@ -4,9 +4,10 @@
 \alias{igt_pvl_delta}
 \title{Iowa Gambling Task (Ahn et al., 2008)}
 \usage{
-igt_pvl_delta(data = NULL, niter = 3000, nwarmup = 1000, nchain = 1,
+igt_pvl_delta(data = "choose", niter = 3000, nwarmup = 1000, nchain = 1,
   ncore = 1, nthin = 1, inits = "random", indPars = "mean",
-  payscale = 100, saveDir = NULL, email = NULL)
+  payscale = 100, saveDir = NULL, email = NULL, modelRegressor = FALSE,
+  adapt_delta = 0.8, stepsize = 1, max_treedepth = 10)
 }
 \arguments{
 \item{data}{A .txt file containing the data to be modeled. Data columns should be labelled as follows: "subjID", "deck", "gain", and "loss". See \bold{Details} below for more information.}
@@ -30,16 +31,25 @@ igt_pvl_delta(data = NULL, niter = 3000, nwarmup = 1000, nchain = 1,
 \item{saveDir}{Path to directory where .RData file of model output (\code{modelData}) can be saved. Leave blank if not interested.}
 
 \item{email}{Character value containing email address to send notification of completion. Leave blank if not interested.}
+
+\item{modelRegressor}{Exporting model-based regressors? TRUE or FALSE. Currently not available for this model.}
+
+\item{adapt_delta}{Floating point number representing the target acceptance probability of a new sample in the MCMC chain. Must be between 0 and 1. See \bold{Details} below.}
+
+\item{stepsize}{Integer value specifying the size of each leapfrog step that the MCMC sampler can take on each new iteration. See \bold{Details} below.}
+
+\item{max_treedepth}{Integer value specifying how many leapfrog steps that the MCMC sampler can take on each new iteration. See \bold{Details} below.}
 }
 \value{
-\code{modelData}  A class \code{'hBayesDM'} object with the following components:
+\code{modelData}  A class \code{"hBayesDM"} object with the following components:
 \describe{
  \item{\code{model}}{Character string with the name of the model ("igt_pvl_delta").}
- \item{\code{allIndPars}}{\code{'data.frame'} containing the summarized parameter 
-   values (as specified by \code{'indPars'}) for each subject.}
- \item{\code{parVals}}{A \code{'list'} where each element contains posterior samples
-   over different model parameters.}
- \item{\code{fit}}{A class \code{'stanfit'} object containing the fitted model.}
+ \item{\code{allIndPars}}{\code{"data.frame"} containing the summarized parameter 
+   values (as specified by \code{"indPars"}) for each subject.}
+ \item{\code{parVals}}{A \code{"list"} where each element contains posterior samples
+   over different model parameters. }
+ \item{\code{fit}}{A class \code{"stanfit"} object containing the fitted model.}
+ \item{\code{rawdata}}{\code{"data.frame"} containing the raw data used to fit the model, as specified by the user.}
 }
 }
 \description{
@@ -66,22 +76,28 @@ however it is necessary that they be labelled correctly and contain the informat
 \strong{*}Note: The data.txt file may contain other columns of data (e.g. "Reaction_Time", "trial_number", etc.), but only the data with the column
 names listed above will be used for analysis/modeling. As long as the columns above are present and labelled correctly,
 there is no need to remove other miscellaneous data columns.    
- 
+
 \strong{nwarmup} is a numerical value that specifies how many MCMC samples should not be stored upon the 
 beginning of each chain. For those familiar with Bayesian methods, this value is equivalent to a burn-in sample. 
 Due to the nature of MCMC sampling, initial values (where the sampling chain begins) can have a heavy influence 
-on the generated posterior distributions. The \strong{nwarmup} argument can be set to a high number in order to curb the 
+on the generated posterior distributions. The \code{nwarmup} argument can be set to a high number in order to curb the 
 effects that initial values have on the resulting posteriors.  
 
 \strong{nchain} is a numerical value that specifies how many chains (i.e. independent sampling sequences) should be
 used to draw samples from the posterior distribution. Since the posteriors are generated from a sampling 
 process, it is good practice to run multiple chains to ensure that a representative posterior is attained. When
 sampling is completed, the multiple chains may be checked for convergence with the \code{plot(myModel, type = "trace")}
-command. The chains should resemble a "furry caterpillar". 
+command. The chains should resemble a "furry caterpillar".
 
 \strong{nthin} is a numerical value that specifies the "skipping" behavior of the MCMC samples being chosen 
-to generate the posterior distributions. By default, \strong{nthin} is equal to 1, hence every sample is used to 
-generate the posterior.
+to generate the posterior distributions. By default, \code{nthin} is equal to 1, hence every sample is used to 
+generate the posterior. 
+
+\strong{Contol Parameters:} adapt_delta, stepsize, and max_treedepth are advanced options that give the user more control 
+over Stan's MCMC sampler. The Stan creators recommend that only advanced users change the default values, as alterations
+can profoundly change the sampler's behavior. Refer to Hoffman & Gelman (2014, Journal of Machine Learning Research) for 
+more information on the functioning of the sampler control parameters. One can also refer to section 58.2 of the  
+\href{http://mc-stan.org/documentation/}{Stan User's Manual} for a less technical description of these arguments.
 }
 \examples{
 \dontrun{
@@ -94,5 +110,15 @@ plot(output)
 # Show the WAIC and LOOIC model fit estimates 
 printFit(output)
 }
+}
+\references{
+Ahn, W. Y., Busemeyer, J. R., & Wagenmakers, E. J. (2008). Comparison of decision learning models using the generalization 
+criterion method. Cognitive Science, 32(8), 1376-1402. http://doi.org/10.1080/03640210802352992
+
+Hoffman, M. D., & Gelman, A. (2014). The No-U-turn sampler: adaptively setting path lengths in Hamiltonian Monte Carlo. The 
+Journal of Machine Learning Research, 15(1), 1593-1623.
+}
+\seealso{
+We refer users to our in-depth tutorial for an example of using hBayesDM: \url{https://rpubs.com/CCSL/hBayesDM}
 }
 

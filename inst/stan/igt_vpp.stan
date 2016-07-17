@@ -7,27 +7,15 @@ data {
 }
 transformed data {
   vector[4] initV;
-  initV  <- rep_vector(0.0, 4);
+  initV  = rep_vector(0.0, 4);
 }
 parameters {
-  real mu_A_pr;
-  real mu_alpha_pr;
-  real mu_cons_pr;
-  real mu_lambda_pr;
-  real mu_epP_pr;
-  real mu_epN_pr;
-  real mu_K_pr;
-  real mu_w_pr;
-
-  real<lower=0> sd_A;
-  real<lower=0> sd_alpha;
-  real<lower=0> sd_cons;
-  real<lower=0> sd_lambda;
-  real<lower=0> sd_epP;
-  real<lower=0> sd_epN;
-  real<lower=0> sd_K;
-  real<lower=0> sd_w;
-
+# Declare all parameters as vectors for vectorizing
+  # Hyper(group)-parameters  
+  vector[8] mu_p;  
+  vector<lower=0>[8] sigma;
+    
+  # Subject-level raw parameters (for Matt trick)
   vector[N] A_pr;
   vector[N] alpha_pr;
   vector[N] cons_pr;
@@ -38,6 +26,7 @@ parameters {
   vector[N] w_pr;
 }
 transformed parameters {
+  # Transform subject-level raw parameters
   vector<lower=0, upper=1>[N] A;
   vector<lower=0, upper=2>[N] alpha;
   vector<lower=0, upper=5>[N] cons;
@@ -48,46 +37,33 @@ transformed parameters {
   vector<lower=0, upper=1>[N] w;
 
   for (i in 1:N) {
-    A[i] <- Phi_approx( mu_A_pr + sd_A * A_pr[i] );
-    alpha[i] <- 2 * Phi_approx( mu_alpha_pr + sd_alpha * alpha_pr[i] );
-    cons[i] <- 5 * Phi_approx( mu_cons_pr + sd_cons * cons_pr[i] );
-    lambda[i] <- 10 * Phi_approx( mu_lambda_pr + sd_lambda * lambda_pr[i] );
-    K[i] <- Phi_approx( mu_K_pr + sd_K * K_pr[i] );
-    w[i] <- Phi_approx( mu_w_pr + sd_w * w_pr[i] );
+    A[i]      = Phi_approx( mu_p[1] + sigma[1] * A_pr[i] );
+    alpha[i]  = Phi_approx( mu_p[2] + sigma[2] * alpha_pr[i] ) * 2;
+    cons[i]   = Phi_approx( mu_p[3] + sigma[3] * cons_pr[i] ) * 5;
+    lambda[i] = Phi_approx( mu_p[4] + sigma[4] * lambda_pr[i] ) * 10;
+    K[i]      = Phi_approx( mu_p[7] + sigma[7] * K_pr[i] );
+    w[i]      = Phi_approx( mu_p[8] + sigma[8] * w_pr[i] );
   }
-  epP <- mu_epP_pr + sd_epP * epP_pr;
-  epN <- mu_epN_pr + sd_epN * epN_pr;
+  epP = mu_p[5] + sigma[5] * epP_pr;
+  epN = mu_p[6] + sigma[6] * epN_pr;
 }
 model {
-  mu_A_pr ~ normal(0, 1);
-  mu_alpha_pr ~ normal(0, 1);
-  mu_cons_pr ~ normal(0, 1);
-  mu_lambda_pr ~ normal(0, 1);
-  mu_epP_pr ~ normal(0, 5);
-  mu_epN_pr ~ normal(0, 5);
-  mu_K_pr ~ normal(0, 1);
-  mu_w_pr ~ normal(0, 1);
-
-  sd_A ~ cauchy(0,5);
-  sd_alpha ~ cauchy(0,5);
-  sd_cons ~ cauchy(0,5);
-  sd_lambda ~ cauchy(0,5);
-  sd_epP ~ cauchy(0,5);
-  sd_epN ~ cauchy(0,5);
-  sd_K ~ cauchy(0,5);
-  sd_w ~ cauchy(0,5);
-
-  # Matt trick: all dists. should be normal(0,1)
-  A_pr ~ normal(0, 1.0);
-  alpha_pr ~ normal(0, 1.0);
-  cons_pr ~ normal(0, 1.0);
+  # Hyperparameters
+  mu_p  ~ normal(0, 1);
+  sigma ~ cauchy(0, 5);
+  
+  # individual parameters
+  A_pr      ~ normal(0, 1.0);
+  alpha_pr  ~ normal(0, 1.0);
+  cons_pr   ~ normal(0, 1.0);
   lambda_pr ~ normal(0, 1.0);
-  epP_pr ~ normal(0, 1.0);
-  epN_pr ~ normal(0, 1.0);
-  K_pr ~ normal(0, 1.0);
-  w_pr ~ normal(0, 1.0);
+  epP_pr    ~ normal(0, 1.0);
+  epN_pr    ~ normal(0, 1.0);
+  K_pr      ~ normal(0, 1.0);
+  w_pr      ~ normal(0, 1.0);
 
   for (i in 1:N) {
+    # Define values
     vector[4] ev;
     vector[4] p_next;
     vector[4] str;
@@ -97,36 +73,24 @@ model {
     real curUtil;     # utility of curFb
     real theta;       # theta = 3^c - 1
     
-    theta <- pow(3, cons[i]) -1;
-    ev <- initV; # initial ev values
-    pers <- initV; # initial pers values
+    # Initialize values
+    theta = pow(3, cons[i]) -1;
+    ev = initV; # initial ev values
+    pers = initV; # initial pers values
 
     for (t in 1:(Tsubj[i]-1)) {
-      pers <- pers * K[i]; # decay
-      #for (d in 1:4) {
-      #  pers[d] <- pers[d] * K[i];   # decay
-      #}
+      pers = pers * K[i]; # decay
       if ( rewlos[i,t] >= 0) {  # x(t) >= 0
-        curUtil <- pow(rewlos[i,t], alpha[i]);
-        pers[ ydata[i,t] ] <- pers[ ydata[i,t] ] + epP[i];  # perseverance term
+        curUtil = pow(rewlos[i,t], alpha[i]);
+        pers[ ydata[i,t] ] = pers[ ydata[i,t] ] + epP[i];  # perseverance term
       } else {                  # x(t) < 0
-        curUtil <- -1 * lambda[i] * pow( -1*rewlos[i,t], alpha[i]);
-        pers[ ydata[i,t] ] <- pers[ ydata[i,t] ] + epN[i];  # perseverance term
+        curUtil = -1 * lambda[i] * pow( -1*rewlos[i,t], alpha[i]);
+        pers[ ydata[i,t] ] = pers[ ydata[i,t] ] + epN[i];  # perseverance term
       }
 
-      ev[ ydata[i, t] ] <- ev[ ydata[i, t] ] + A[i] * (curUtil - ev[ ydata[i, t] ] );
+      ev[ ydata[i, t] ] = ev[ ydata[i, t] ] + A[i] * (curUtil - ev[ ydata[i, t] ] );
       # calculate V
-      V <- w[i]*ev + (1-w[i])*pers;
-      
-      #for (d in 1:4) {
-      #  str[d] <- exp( theta * (w[i]*ev[d]+(1-w[i])*pers[d]) );
-      #  #str[d] <- exp( theta * ev[d] );
-      #}
-      #for (d in 1:4) {
-      #  p_next[d] <- str[d] / sum(str);
-      #}
-      #ydata[i, t+1] ~ categorical( p_next );
-      
+      V = w[i]*ev + (1-w[i])*pers;
       # softmax choice
       ydata[i, t+1] ~ categorical_logit( theta * V );
       
@@ -135,6 +99,7 @@ model {
 }
 
 generated quantities {
+  # For group level parameters
   real<lower=0,upper=1> mu_A;
   real<lower=0,upper=2> mu_alpha;
   real<lower=0,upper=5> mu_cons;
@@ -143,19 +108,22 @@ generated quantities {
   real mu_epN;
   real<lower=0,upper=1> mu_K;
   real<lower=0,upper=1> mu_w;
+  
+  # For log likelihood calculation
   real log_lik[N];
 
-  mu_A <- Phi_approx(mu_A_pr);
-  mu_alpha <- Phi_approx(mu_alpha_pr) * 2;
-  mu_cons <- Phi_approx(mu_cons_pr) * 5;
-  mu_lambda <- Phi_approx(mu_lambda_pr) * 10;
-  mu_epP <- mu_epP_pr;
-  mu_epN <- mu_epN_pr;
-  mu_K <- Phi_approx(mu_K_pr);
-  mu_w <- Phi_approx(mu_w_pr);
+  mu_A      = Phi_approx(mu_p[1]);
+  mu_alpha  = Phi_approx(mu_p[2]) * 2;
+  mu_cons   = Phi_approx(mu_p[3]) * 5;
+  mu_lambda = Phi_approx(mu_p[4]) * 10;
+  mu_epP    = mu_p[5];
+  mu_epN    = mu_p[6];
+  mu_K      = Phi_approx(mu_p[7]);
+  mu_w      = Phi_approx(mu_p[8]);
   
   { # local section, this saves time and space
     for (i in 1:N) {
+      # Define values
       vector[4] ev;
       vector[4] p_next;
       vector[4] str;
@@ -164,42 +132,28 @@ generated quantities {
   
       real curUtil;     # utility of curFb
       real theta;       # theta = 3^c - 1
-      log_lik[i] <- 0;
-            
-      theta <- pow(3, cons[i]) -1;
-      ev <- initV; # initial ev values
-      pers <- initV; # initial pers values
+      
+      # Initialize values 
+      log_lik[i] = 0;
+      theta      = pow(3, cons[i]) -1;
+      ev         = initV; # initial ev values
+      pers       = initV; # initial pers values
   
       for (t in 1:(Tsubj[i]-1)) {
-        pers <- pers * K[i]; # decay
-        #for (d in 1:4) {
-        #  pers[d] <- pers[d] * K[i];   # decay
-        #}
+        pers = pers * K[i]; # decay
         if ( rewlos[i,t] >= 0) {  # x(t) >= 0
-          curUtil <- pow(rewlos[i,t], alpha[i]);
-          pers[ ydata[i,t] ] <- pers[ ydata[i,t] ] + epP[i];  # perseverance term
+          curUtil = pow(rewlos[i,t], alpha[i]);
+          pers[ ydata[i,t] ] = pers[ ydata[i,t] ] + epP[i];  # perseverance term
         } else {                  # x(t) < 0
-          curUtil <- -1 * lambda[i] * pow( -1*rewlos[i,t], alpha[i]);
-          pers[ ydata[i,t] ] <- pers[ ydata[i,t] ] + epN[i];  # perseverance term
+          curUtil = -1 * lambda[i] * pow( -1*rewlos[i,t], alpha[i]);
+          pers[ ydata[i,t] ] = pers[ ydata[i,t] ] + epN[i];  # perseverance term
         }
   
-        ev[ ydata[i, t] ] <- ev[ ydata[i, t] ] + A[i] * (curUtil - ev[ ydata[i, t] ] );
+        ev[ ydata[i, t] ] = ev[ ydata[i, t] ] + A[i] * (curUtil - ev[ ydata[i, t] ] );
         # calculate V
-        V <- w[i]*ev + (1-w[i])*pers;
-        
-        #for (d in 1:4) {
-        #  str[d] <- exp( theta * (w[i]*ev[d]+(1-w[i])*pers[d]) );
-        #  #str[d] <- exp( theta * ev[d] );
-        #}
-        #for (d in 1:4) {
-        #  p_next[d] <- str[d] / sum(str);
-        #}
-        #ydata[i, t+1] ~ categorical( p_next );
-        
+        V = w[i]*ev + (1-w[i])*pers;
         # softmax choice
-        #ydata[i, t+1] ~ categorical_logit( theta * V );
-        # softmax choice
-        log_lik[i] <- log_lik[i] + categorical_logit_log( ydata[i, t+1], theta * V );
+        log_lik[i] = log_lik[i] + categorical_logit_lpmf( ydata[i, t+1] | theta * V );
       }
     }
   }  

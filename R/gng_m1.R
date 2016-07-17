@@ -1,4 +1,4 @@
-#' Orthogonalized Go/Nogo Task (Guitart-Masip et al, 2012)
+#' Orthogonalized Go/Nogo Task 
 #' 
 #' @description 
 #' Hierarchical Bayesian Modeling of the Orthogonolized Go/Nogo Task using the following parameters: "xi" (noise), "ep" (learning rate), and "rho" (effective size).
@@ -16,13 +16,18 @@
 #' @param indPars Character value specifying how to summarize individual parameters. Current options are: "mean", "median", or "mode".
 #' @param saveDir Path to directory where .RData file of model output (\code{modelData}) can be saved. Leave blank if not interested.
 #' @param email Character value containing email address to send notification of completion. Leave blank if not interested. 
+#' @param modelRegressor Exporting model-based regressors (Q(Go), Q(NoGo))? TRUE or FALSE. 
+#' @param adapt_delta Floating point number representing the target acceptance probability of a new sample in the MCMC chain. Must be between 0 and 1. See \bold{Details} below.
+#' @param stepsize Integer value specifying the size of each leapfrog step that the MCMC sampler can take on each new iteration. See \bold{Details} below.
+#' @param max_treedepth Integer value specifying how many leapfrog steps that the MCMC sampler can take on each new iteration. See \bold{Details} below. 
 #' 
-#' @return \code{modelData}  A class \code{'hBayesDM'} object with the following components:
+#' @return \code{modelData}  A class \code{"hBayesDM"} object with the following components:
 #' \describe{
-#'  \item{\code{model}}{Character string with the name of the model ("gng_m1").}
-#'  \item{\code{allIndPars}}{\code{'data.frame'} containing the summarized parameter values (as specified by \code{'indPars'}) for each subject.}
-#'  \item{\code{parVals}}{A \code{'list'} where each element contains posterior samples over different model parameters. }
-#'  \item{\code{fit}}{A class \code{'stanfit'} object containing the fitted model.}
+#'  \item{\code{model}}{Character string with the name of the model (\code{"gng_m1"}).}
+#'  \item{\code{allIndPars}}{\code{"data.frame"} containing the summarized parameter values (as specified by \code{"indPars"}) for each subject.}
+#'  \item{\code{parVals}}{A \code{"list"} where each element contains posterior samples over different model parameters. }
+#'  \item{\code{fit}}{A class \code{"stanfit"} object containing the fitted model.}
+#'  \item{\code{rawdata}}{\code{"data.frame"} containing the raw data used to fit the model, as specified by the user.}
 #' }  
 #'
 #' @importFrom rstan stan rstan_options extract
@@ -53,20 +58,36 @@
 #' \strong{nwarmup} is a numerical value that specifies how many MCMC samples should not be stored upon the 
 #' beginning of each chain. For those familiar with Bayesian methods, this value is equivalent to a burn-in sample. 
 #' Due to the nature of MCMC sampling, initial values (where the sampling chain begins) can have a heavy influence 
-#' on the generated posterior distributions. The \strong{nwarmup} argument can be set to a high number in order to curb the 
+#' on the generated posterior distributions. The \code{nwarmup} argument can be set to a high number in order to curb the 
 #' effects that initial values have on the resulting posteriors.  
 #' 
 #' \strong{nchain} is a numerical value that specifies how many chains (i.e. independent sampling sequences) should be
 #' used to draw samples from the posterior distribution. Since the posteriors are generated from a sampling 
 #' process, it is good practice to run multiple chains to ensure that a representative posterior is attained. When
 #' sampling is completed, the multiple chains may be checked for convergence with the \code{plot(myModel, type = "trace")}
-#' command. The chains should resemble a "furry caterpillar". 
+#' command. The chains should resemble a "furry caterpillar".
 #' 
 #' \strong{nthin} is a numerical value that specifies the "skipping" behavior of the MCMC samples being chosen 
-#' to generate the posterior distributions. By default, \strong{nthin} is equal to 1, hence every sample is used to 
+#' to generate the posterior distributions. By default, \code{nthin} is equal to 1, hence every sample is used to 
 #' generate the posterior. 
 #' 
+#' \strong{Contol Parameters:} adapt_delta, stepsize, and max_treedepth are advanced options that give the user more control 
+#' over Stan's MCMC sampler. The Stan creators recommend that only advanced users change the default values, as alterations
+#' can profoundly change the sampler's behavior. Refer to Hoffman & Gelman (2014, Journal of Machine Learning Research) for 
+#' more information on the functioning of the sampler control parameters. One can also refer to section 58.2 of the  
+#' \href{http://mc-stan.org/documentation/}{Stan User's Manual} for a less technical description of these arguments. 
+#' 
 #' @export 
+#' 
+#' @references 
+#' Guitart-Masip, M., Huys, Q. J. M., Fuentemilla, L., Dayan, P., Duzel, E., & Dolan, R. J. (2012). Go and no-go learning in 
+#' reward and punishment: Interactions between affect and effect. Neuroimage, 62(1), 154-166. http://doi.org/10.1016/j.neuroimage.2012.04.024
+#' 
+#' Hoffman, M. D., & Gelman, A. (2014). The No-U-turn sampler: adaptively setting path lengths in Hamiltonian Monte Carlo. The 
+#' Journal of Machine Learning Research, 15(1), 1593-1623.
+#' 
+#' @seealso 
+#' We refer users to our in-depth tutorial for an example of using hBayesDM: \url{https://rpubs.com/CCSL/hBayesDM}
 #' 
 #' @examples 
 #' \dontrun{
@@ -80,19 +101,30 @@
 #' printFit(output)
 #' }
 
-gng_m1 <- function(data     = NULL,
-                   niter    = 5000, 
-                   nwarmup  = 2000, 
-                   nchain   = 1,
-                   ncore    = 1, 
-                   nthin    = 1,
-                   inits    = "random",  
-                   indPars  = "mean", 
-                   saveDir  = NULL,
-                   email    = NULL) {
-
+gng_m1 <- function(data          = "choose",
+                   niter         = 5000, 
+                   nwarmup       = 2000, 
+                   nchain        = 1,
+                   ncore         = 1, 
+                   nthin         = 1,
+                   inits         = "random",  
+                   indPars       = "mean", 
+                   saveDir       = NULL,
+                   email         = NULL,
+                   modelRegressor= FALSE,
+                   adapt_delta   = 0.8,
+                   stepsize      = 1,
+                   max_treedepth = 10 ) {
+  
   # Path to .stan model file
-  modelPath <- system.file("stan", "gng_m1.stan", package="hBayesDM")
+  if (modelRegressor) { # model regressors (for model-based neuroimaging, etc.)
+    modelPath <- system.file("stan", "gng_m1_reg.stan", package="hBayesDM")
+    cat("************************************\n")
+    cat("** Extract model-based regressors **\n")
+    cat("************************************\n")
+  } else {
+    modelPath <- system.file("stan", "gng_m1.stan", package="hBayesDM")
+  }
   
   # To see how long computations take
   startTime <- Sys.time()    
@@ -100,15 +132,17 @@ gng_m1 <- function(data     = NULL,
   # For using example data
   if (data=="example") {
     data <- system.file("extdata", "gng_exampleData.txt", package = "hBayesDM")
+  } else if (data=="choose") {
+    data <- file.choose()
   }
-
+  
   # Load data
   if (file.exists(data)) {
     rawdata <- read.table( data, header = T )
   } else {
     stop("** The data file does not exist. Please check it again. **\n  e.g., data = '/MyFolder/SubFolder/dataFile.txt', ... **\n")
   }  
-
+  
   # Individual Subjects
   subjList <- unique(rawdata[,"subjID"]) # list of subjects x blocks
   numSubjs <- length(subjList)           # number of subjects
@@ -119,6 +153,10 @@ gng_m1 <- function(data     = NULL,
                "sigma", 
                "xi", "ep", "rho",
                "log_lik")
+  
+  if (modelRegressor) { # model regressors (for model-based neuroimaging, etc.)
+    POI = c(POI, "Qgo", "Qnogo", "Wgo", "Wnogo")
+  }
   
   modelName <- "gng_m1"
   
@@ -147,11 +185,11 @@ gng_m1 <- function(data     = NULL,
   
   # Information for user continued
   cat(" # of (max) trials per subject = ", maxTrials, "\n\n")
-
+  
   outcome <- array(0, c(numSubjs, maxTrials) )
   pressed <- array(1, c(numSubjs, maxTrials) )
   cue     <- array(1, c(numSubjs, maxTrials))
-    
+  
   for (i in 1:numSubjs) {
     curSubj      <- subjList[i]
     useTrials    <- Tsubj[i]
@@ -184,17 +222,17 @@ gng_m1 <- function(data     = NULL,
     }  
     genInitList <- function() {
       list(
-        mu_p  = c(qnorm(inits_fixed[1]), qnorm(inits_fixed[2]), log(inits_fixed[3])),
-        sigma = c(1, 1, 1),
-        xi_p  = rep(qnorm(inits_fixed[1]), numSubjs),
-        ep_p  = rep(qnorm(inits_fixed[2]), numSubjs),
-        rho_p = rep(log(inits_fixed[3]), numSubjs)
+        mu_p   = c(qnorm(inits_fixed[1]), qnorm(inits_fixed[2]), log(inits_fixed[3])),
+        sigma  = c(1.0, 1.0, 1.0),
+        xi_pr  = rep(qnorm(inits_fixed[1]), numSubjs),
+        ep_pr  = rep(qnorm(inits_fixed[2]), numSubjs),
+        rho_pr = rep(log(inits_fixed[3]), numSubjs)
       )
     }
   } else {
     genInitList <- "random"
   }
-    
+  
   rstan::rstan_options(auto_write = TRUE)
   if (ncore > 1) {
     numCores <- parallel::detectCores()
@@ -214,23 +252,29 @@ gng_m1 <- function(data     = NULL,
   cat("************************************\n")
   
   # Fit the Stan model
-  fit <- rstan::stan(file   = modelPath, 
-                     data   = dataList, 
-                     pars   = POI,
-                     warmup = nwarmup,
-                     init   = genInitList, 
-                     iter   = niter, 
-                     chains = nchain,
-                     thin   = nthin)
+  fit <- rstan::stan(file    = modelPath, 
+                     data    = dataList, 
+                     pars    = POI,
+                     warmup  = nwarmup,
+                     init    = genInitList, 
+                     iter    = niter, 
+                     chains  = nchain,
+                     thin    = nthin,
+                     control = list(adapt_delta   = adapt_delta, 
+                                    max_treedepth = max_treedepth, 
+                                    stepsize      = stepsize) )
   
+  ## Extract parameters
   parVals <- rstan::extract(fit, permuted=T)
   
   xi  <- parVals$xi
   ep  <- parVals$ep
   rho <- parVals$rho
   
+  # Individual parameters (e.g., individual posterior means)
   allIndPars <- array(NA, c(numSubjs, numPars))
   allIndPars <- as.data.frame(allIndPars)
+  
   for (i in 1:numSubjs) {
     if (indPars=="mean") {
       allIndPars[i, ] <- c( mean(xi[, i]), 
@@ -252,10 +296,40 @@ gng_m1 <- function(data     = NULL,
                             "ep", 
                             "rho", 
                             "subjID")
-
-  # Wrap up data into a list
-  modelData        <- list(modelName, allIndPars, parVals, fit)
-  names(modelData) <- c("model", "allIndPars", "parVals", "fit")
+  
+  # model-based regressors?
+  if (modelRegressor) {
+    if (indPars=="mean") {
+      Qgo   = apply(parVals$Qgo, c(2,3), mean)
+      Qnogo = apply(parVals$Qnogo, c(2,3), mean)
+      Wgo   = apply(parVals$Wgo, c(2,3), mean)
+      Wnogo = apply(parVals$Wnogo, c(2,3), mean)
+    } else if (indPars=="median") {
+      Qgo   = apply(parVals$Qgo, c(2,3), median)
+      Qnogo = apply(parVals$Qnogo, c(2,3), median)
+      Wgo   = apply(parVals$Wgo, c(2,3), median)
+      Wnogo = apply(parVals$Wnogo, c(2,3), median)
+    } else if (indPars=="mode") {
+      Qgo   = apply(parVals$Qgo, c(2,3), modeest::mfv)   # using mfv function
+      Qnogo = apply(parVals$Qnogo, c(2,3), modeest::mfv) # using mfv function
+      Wgo   = apply(parVals$Wgo, c(2,3), modeest::mfv)   # using mfv function
+      Wnogo = apply(parVals$Wnogo, c(2,3), modeest::mfv) # using mfv function
+    }
+    # initialize modelRegressor and add model-based regressors
+    modelRegressor = NULL
+    modelRegressor$Qgo = Qgo
+    modelRegressor$Qnogo = Qnogo
+    modelRegressor$Wgo = Wgo
+    modelRegressor$Wnogo = Wnogo
+    
+    # Wrap up data into a list
+    modelData        <- list(modelName, allIndPars, parVals, fit, rawdata, modelRegressor)
+    names(modelData) <- c("model", "allIndPars", "parVals", "fit", "rawdata", "modelRegressor")
+  } else {
+    # Wrap up data into a list
+    modelData        <- list(modelName, allIndPars, parVals, fit, rawdata)
+    names(modelData) <- c("model", "allIndPars", "parVals", "fit", "rawdata")
+  }
   class(modelData) <- "hBayesDM"
   
   # Total time of computations
@@ -276,7 +350,7 @@ gng_m1 <- function(data     = NULL,
   # Send email to notify user of completion
   if (is.null(email)==F) {
     mail::sendmail(email, paste("model=", modelName, ", fileName = ", data),
-             paste("Check ", getwd(), ". It took ", as.character.Date(timeTook), sep="") )
+                   paste("Check ", getwd(), ". It took ", as.character.Date(timeTook), sep="") )
   }
   # Inform user of completion
   cat("\n************************************\n")

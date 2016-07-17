@@ -64,7 +64,7 @@ plot_igt_pvl_delta <- function( obj, fontSize = 10, ncols = 4, binSize = 30 ) {
 
 plot_igt_vpp <- function( obj, fontSize = 10, ncols = 8, binSize = 30 ) {
   pars = obj$parVals
-  h1 = plotDist(sample = pars$mu_A, fontSize = fontSize, binSize = binSize, xLim = c(0, 1), xLab = "A (Decay Rate)")
+  h1 = plotDist(sample = pars$mu_A, fontSize = fontSize, binSize = binSize, xLim = c(0, 1), xLab = "A (Learning Rate)")
   h2 = plotDist(sample = pars$mu_alpha, fontSize = fontSize, binSize = binSize, xLim = c(0, 2), xLab = expression(paste(alpha, " (Feedback Sens.)")))
   h3 = plotDist(sample = pars$mu_cons, fontSize = fontSize, binSize = binSize, xLim = c(0,5), xLab = "c (Choice Consistency)")
   h4 = plotDist(sample = pars$mu_lambda, fontSize = fontSize, binSize = binSize, xLim = c(0,10), xLab = expression(paste(lambda, " (Loss Aversion)")))
@@ -73,6 +73,22 @@ plot_igt_vpp <- function( obj, fontSize = 10, ncols = 8, binSize = 30 ) {
   h7 = plotDist(sample = pars$mu_K, fontSize = fontSize, binSize = binSize, xLim = c(0,1), xLab = expression(paste(kappa, " (Decay Rate)")))
   h8 = plotDist(sample = pars$mu_w, fontSize = fontSize, binSize = binSize, xLim = c(0,1), xLab = expression(paste(omega, " (RL Weight)")))
   h_all = multiplot(h1, h2, h3, h4, h5, h6, h7, h8, cols = ncols)
+  return(h_all)
+}
+
+plot_ra_noLA <- function( obj, fontSize = 10, ncols = 2, binSize = 30 ) {
+  pars = obj$parVals
+  h1 = plotDist(sample = pars$mu_rho, fontSize = fontSize, binSize = binSize, xLab = expression(paste(rho, " (Risk Aversion)")))
+  h2 = plotDist(sample = pars$mu_tau, fontSize = fontSize, binSize = binSize, xLab = expression(paste(tau, " (Inverse Temp.)")))
+  h_all = multiplot(h1, h2, cols = ncols)
+  return(h_all)
+}
+
+plot_ra_noRA <- function( obj, fontSize = 10, ncols = 2, binSize = 30 ) {
+  pars = obj$parVals
+  h1 = plotDist(sample = pars$mu_lambda, fontSize = fontSize, binSize = binSize, xLab = expression(paste(lambda, " (Loss Aversion)")))
+  h2 = plotDist(sample = pars$mu_tau, fontSize = fontSize, binSize = binSize, xLab = expression(paste(tau, " (Inverse Temp.)")))
+  h_all = multiplot(h1, h2, cols = ncols)
   return(h_all)
 }
 
@@ -85,9 +101,18 @@ plot_ra_prospect <- function( obj, fontSize = 10, ncols = 3, binSize = 30 ) {
   return(h_all)
 }
 
-plot_bandit2arm<- function( obj, fontSize = 10, ncols = 2, binSize = 30 ) {
+plot_ra_prospect <- function( obj, fontSize = 10, ncols = 3, binSize = 30 ) {
   pars = obj$parVals
-  h1 = plotDist(sample = pars$mu_lr, fontSize = fontSize, binSize = binSize, xLim = c(0, 1), xLab = "lr (Learning Rate)")
+  h1 = plotDist(sample = pars$mu_rho, fontSize = fontSize, binSize = binSize, xLab = expression(paste(rho, " (Risk Aversion)")))
+  h2 = plotDist(sample = pars$mu_lambda, fontSize = fontSize, binSize = binSize, xLab = expression(paste(lambda, " (Loss Aversion)")))
+  h3 = plotDist(sample = pars$mu_tau, fontSize = fontSize, binSize = binSize, xLab = expression(paste(tau, " (Inverse Temp.)")))
+  h_all = multiplot(h1, h2, h3, cols = ncols)
+  return(h_all)
+}
+
+plot_bandit2arm_delta <- function( obj, fontSize = 10, ncols = 2, binSize = 30 ) {
+  pars = obj$parVals
+  h1 = plotDist(sample = pars$mu_A, fontSize = fontSize, binSize = binSize, xLim = c(0, 1), xLab = "A (Learning Rate)")
   h2 = plotDist(sample = pars$mu_tau, fontSize = fontSize, binSize = binSize, xLab = expression(paste(tau, " (Inverse Temp.)")))
   h_all = multiplot(h1, h2, cols = ncols)
   return(h_all)
@@ -97,6 +122,24 @@ plot_prl_fictitious <- function( obj, fontSize = 10, ncols = 3, binSize = 30 ) {
   pars = obj$parVals
   h1 = plotDist(sample = pars$mu_eta, fontSize = fontSize, binSize = binSize, xLim = c(0,1), xLab = expression(paste(eta, " (Learning Rate)")))
   h2 = plotDist(sample = pars$mu_alpha, fontSize = fontSize, binSize = binSize, xLab = expression(paste(alpha, " (Indecision Point)")))
+  h3 = plotDist(sample = pars$mu_beta, fontSize = fontSize, binSize = binSize, xLab = expression(paste(beta, " (Inverse Temp.)")))
+  h_all = multiplot(h1, h2, h3, cols = ncols)
+  return(h_all)
+}
+
+plot_prl_ewa <- function( obj, fontSize = 10, ncols = 3, binSize = 30 ) {
+  pars = obj$parVals
+  h1 = plotDist(sample = pars$mu_phi, fontSize = fontSize, binSize = binSize, xLim = c(0,1), xLab = expression(paste(phi, " (1 - Learning Rate)")))
+  h2 = plotDist(sample = pars$mu_rho, fontSize = fontSize, binSize = binSize, xLim = c(0,1), xLab = expression(paste(rho, " (Experience Decay Factor)")))
+  h3 = plotDist(sample = pars$mu_beta, fontSize = fontSize, binSize = binSize, xLab = expression(paste(beta, " (Inverse Temp.)")))
+  h_all = multiplot(h1, h2, h3, cols = ncols)
+  return(h_all)
+}
+
+plot_prl_rp <- function( obj, fontSize = 10, ncols = 3, binSize = 30 ) {
+  pars = obj$parVals
+  h1 = plotDist(sample = pars$mu_Apun, fontSize = fontSize, binSize = binSize, xLim = c(0,1), xLab = paste(expression('A'['pun']), " (Punishment Learning Rate)"))
+  h2 = plotDist(sample = pars$mu_Arew, fontSize = fontSize, binSize = binSize, xLim = c(0,1), xLab = paste(expression('A'['rew']), " (Reward Learning Rate)"))
   h3 = plotDist(sample = pars$mu_beta, fontSize = fontSize, binSize = binSize, xLab = expression(paste(beta, " (Inverse Temp.)")))
   h_all = multiplot(h1, h2, h3, cols = ncols)
   return(h_all)
@@ -126,3 +169,22 @@ plot_dd_cs <- function( obj, fontSize = 10, ncols = 3, binSize = 30 ) {
   h_all = multiplot(h1, h2, h3, cols = ncols)
   return(h_all)
 }
+
+plot_ug_bayes <- function( obj, fontSize = 10, ncols = 3, binSize = 30 ) {
+  pars = obj$parVals
+  h1 = plotDist(sample = pars$mu_alpha, fontSize = fontSize, binSize = binSize, xLab = expression(paste(alpha, " (Envy)")))
+  h2 = plotDist(sample = pars$mu_Beta, fontSize = fontSize, binSize = binSize, xLab = expression(paste(beta, " (Guilt)")) )
+  h3 = plotDist(sample = pars$mu_tau, fontSize = fontSize, binSize = binSize, xLab = expression(paste(tau, " (Inverse Temp.)")))
+  h_all = multiplot(h1, h2, h3, cols = ncols)
+  return(h_all)
+}
+
+plot_ug_delta <- function( obj, fontSize = 10, ncols = 3, binSize = 30 ) {
+  pars = obj$parVals
+  h1 = plotDist(sample = pars$mu_ep, fontSize = fontSize, binSize = binSize, xLim = c(0,1), xLab = expression(paste(epsilon, " (Norm Adapt. Rate)")))
+  h2 = plotDist(sample = pars$mu_tau, fontSize = fontSize, binSize = binSize, xLab = expression(paste(tau, " (Inverse Temp.)")) )
+  h3 = plotDist(sample = pars$mu_alpha, fontSize = fontSize, binSize = binSize, xLab = expression(paste(alpha, " (Envy)")))
+  h_all = multiplot(h1, h2, h3, cols = ncols)
+  return(h_all)
+}
+

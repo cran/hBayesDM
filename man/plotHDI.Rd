@@ -5,7 +5,7 @@
 \title{Plots highest density interval (HDI) from (MCMC) samples and prints HDI in the R console. HDI is indicated by a red line.}
 \usage{
 plotHDI(sample = NULL, credMass = 0.95, Title = NULL, xLab = "Value",
-  yLab = "Density", binSize = 30, ...)
+  yLab = "Density", fontSize = NULL, binSize = 30, ...)
 }
 \arguments{
 \item{sample}{MCMC samples}
@@ -17,6 +17,8 @@ plotHDI(sample = NULL, credMass = 0.95, Title = NULL, xLab = "Value",
 \item{xLab}{Character value containing the x label}
 
 \item{yLab}{Character value containing the y label}
+
+\item{fontSize}{Integer value specifying the font size to be used for the plot labels}
 
 \item{binSize}{Integer value specifyin ghow wide the bars on the histogram should be. Defaults to 30.}
 

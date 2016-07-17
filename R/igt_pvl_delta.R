@@ -17,15 +17,20 @@
 #' @param saveDir Path to directory where .RData file of model output (\code{modelData}) can be saved. Leave blank if not interested.
 #' @param payscale Raw payoffs within data are divided by this number. Used for scaling data. Defaults to 100
 #' @param email Character value containing email address to send notification of completion. Leave blank if not interested. 
-#' 
-#' @return \code{modelData}  A class \code{'hBayesDM'} object with the following components:
+#' @param modelRegressor Exporting model-based regressors? TRUE or FALSE. Currently not available for this model.
+#' @param adapt_delta Floating point number representing the target acceptance probability of a new sample in the MCMC chain. Must be between 0 and 1. See \bold{Details} below.
+#' @param stepsize Integer value specifying the size of each leapfrog step that the MCMC sampler can take on each new iteration. See \bold{Details} below.
+#' @param max_treedepth Integer value specifying how many leapfrog steps that the MCMC sampler can take on each new iteration. See \bold{Details} below. 
+#'  
+#' @return \code{modelData}  A class \code{"hBayesDM"} object with the following components:
 #' \describe{
 #'  \item{\code{model}}{Character string with the name of the model ("igt_pvl_delta").}
-#'  \item{\code{allIndPars}}{\code{'data.frame'} containing the summarized parameter 
-#'    values (as specified by \code{'indPars'}) for each subject.}
-#'  \item{\code{parVals}}{A \code{'list'} where each element contains posterior samples
-#'    over different model parameters.}
-#'  \item{\code{fit}}{A class \code{'stanfit'} object containing the fitted model.}
+#'  \item{\code{allIndPars}}{\code{"data.frame"} containing the summarized parameter 
+#'    values (as specified by \code{"indPars"}) for each subject.}
+#'  \item{\code{parVals}}{A \code{"list"} where each element contains posterior samples
+#'    over different model parameters. }
+#'  \item{\code{fit}}{A class \code{"stanfit"} object containing the fitted model.}
+#'  \item{\code{rawdata}}{\code{"data.frame"} containing the raw data used to fit the model, as specified by the user.}
 #' }
 #' 
 #' @importFrom rstan stan rstan_options extract
@@ -52,24 +57,40 @@
 #' \strong{*}Note: The data.txt file may contain other columns of data (e.g. "Reaction_Time", "trial_number", etc.), but only the data with the column
 #' names listed above will be used for analysis/modeling. As long as the columns above are present and labelled correctly,
 #' there is no need to remove other miscellaneous data columns.    
-#'  
+#' 
 #' \strong{nwarmup} is a numerical value that specifies how many MCMC samples should not be stored upon the 
 #' beginning of each chain. For those familiar with Bayesian methods, this value is equivalent to a burn-in sample. 
 #' Due to the nature of MCMC sampling, initial values (where the sampling chain begins) can have a heavy influence 
-#' on the generated posterior distributions. The \strong{nwarmup} argument can be set to a high number in order to curb the 
+#' on the generated posterior distributions. The \code{nwarmup} argument can be set to a high number in order to curb the 
 #' effects that initial values have on the resulting posteriors.  
 #' 
 #' \strong{nchain} is a numerical value that specifies how many chains (i.e. independent sampling sequences) should be
 #' used to draw samples from the posterior distribution. Since the posteriors are generated from a sampling 
 #' process, it is good practice to run multiple chains to ensure that a representative posterior is attained. When
 #' sampling is completed, the multiple chains may be checked for convergence with the \code{plot(myModel, type = "trace")}
-#' command. The chains should resemble a "furry caterpillar". 
+#' command. The chains should resemble a "furry caterpillar".
 #' 
 #' \strong{nthin} is a numerical value that specifies the "skipping" behavior of the MCMC samples being chosen 
-#' to generate the posterior distributions. By default, \strong{nthin} is equal to 1, hence every sample is used to 
-#' generate the posterior.
+#' to generate the posterior distributions. By default, \code{nthin} is equal to 1, hence every sample is used to 
+#' generate the posterior. 
+#' 
+#' \strong{Contol Parameters:} adapt_delta, stepsize, and max_treedepth are advanced options that give the user more control 
+#' over Stan's MCMC sampler. The Stan creators recommend that only advanced users change the default values, as alterations
+#' can profoundly change the sampler's behavior. Refer to Hoffman & Gelman (2014, Journal of Machine Learning Research) for 
+#' more information on the functioning of the sampler control parameters. One can also refer to section 58.2 of the  
+#' \href{http://mc-stan.org/documentation/}{Stan User's Manual} for a less technical description of these arguments. 
 #' 
 #' @export 
+#' 
+#' @references 
+#' Ahn, W. Y., Busemeyer, J. R., & Wagenmakers, E. J. (2008). Comparison of decision learning models using the generalization 
+#' criterion method. Cognitive Science, 32(8), 1376-1402. http://doi.org/10.1080/03640210802352992
+#' 
+#' Hoffman, M. D., & Gelman, A. (2014). The No-U-turn sampler: adaptively setting path lengths in Hamiltonian Monte Carlo. The 
+#' Journal of Machine Learning Research, 15(1), 1593-1623.
+#' 
+#' @seealso 
+#' We refer users to our in-depth tutorial for an example of using hBayesDM: \url{https://rpubs.com/CCSL/hBayesDM}
 #' 
 #' @examples 
 #' \dontrun{
@@ -83,20 +104,28 @@
 #' printFit(output)
 #' }
 
-igt_pvl_delta <- function(data     = NULL,
-                          niter    = 3000, 
-                          nwarmup  = 1000,
-                          nchain   = 1,
-                          ncore    = 1, 
-                          nthin    = 1,
-                          inits    = "random",
-                          indPars  = "mean", 
-                          payscale = 100,
-                          saveDir  = NULL,
-                          email    = NULL) {
+igt_pvl_delta <- function(data          = "choose",
+                          niter         = 3000, 
+                          nwarmup       = 1000,
+                          nchain        = 1,
+                          ncore         = 1, 
+                          nthin         = 1,
+                          inits         = "random",
+                          indPars       = "mean", 
+                          payscale      = 100,
+                          saveDir       = NULL,
+                          email         = NULL,
+                          modelRegressor= FALSE,
+                          adapt_delta   = 0.8,
+                          stepsize      = 1,
+                          max_treedepth = 10 ) {
   
   # Path to .stan model file
-  modelPath <- system.file("stan", "igt_pvl_delta.stan", package="hBayesDM")
+  if (modelRegressor) { # model regressors (for model-based neuroimaging, etc.)
+    stop("** Model-based regressors are not available for this model **\n")
+  } else {
+    modelPath <- system.file("stan", "igt_pvl_delta.stan", package="hBayesDM")
+  }
   
   # To see how long computations take
   startTime <- Sys.time()   
@@ -104,6 +133,8 @@ igt_pvl_delta <- function(data     = NULL,
   # For using example data
   if (data=="example") {
     data <- system.file("extdata", "igt_exampleData.txt", package = "hBayesDM")
+  } else if (data=="choose") {
+    data <- file.choose()
   }
   
   # Load data
@@ -120,7 +151,7 @@ igt_pvl_delta <- function(data     = NULL,
   # Specify the number of parameters and parameters of interest 
   numPars <- 4
   POI     <- c("mu_A", "mu_alpha", "mu_cons",  "mu_lambda",
-               "sd_A", "sd_alpha", "sd_cons", "sd_lambda", 
+               "sigma", 
                "A", "alpha", "cons", "lambda",
                "log_lik")
   
@@ -190,18 +221,12 @@ igt_pvl_delta <- function(data     = NULL,
     } 
     genInitList <- function() {
       list(
-        mu_A_pr      = qnorm(inits_fixed[1]),
-        mu_alpha_pr  = qnorm(inits_fixed[2] /2),
-        mu_cons_pr   = qnorm( inits_fixed[3] /5 ),
-        mu_lambda_pr = qnorm( inits_fixed[4] / 10 ),
-        sd_A         = 1,
-        sd_alpha     = 1,
-        sd_cons      = 1,
-        sd_lambda    = 1,
-        A_pr         = rep( qnorm(inits_fixed[1]), numSubjs),
-        alpha_pr     = rep( qnorm(inits_fixed[2]/2), numSubjs),
-        cons_pr      = rep( qnorm(inits_fixed[3]/5), numSubjs),
-        lambda_pr    = rep( qnorm(inits_fixed[4]/10), numSubjs)
+        mu_p      = c( qnorm(inits_fixed[1]), qnorm(inits_fixed[2] /2), qnorm( inits_fixed[3] /5 ), qnorm( inits_fixed[4] / 10 ) ),
+        sigma     = c(1.0, 1.0, 1.0, 1.0),
+        A_pr      = rep( qnorm(inits_fixed[1]), numSubjs),
+        alpha_pr  = rep( qnorm(inits_fixed[2]/2), numSubjs),
+        cons_pr   = rep( qnorm(inits_fixed[3]/5), numSubjs),
+        lambda_pr = rep( qnorm(inits_fixed[4]/10), numSubjs)
       )
     }
   } else {
@@ -233,7 +258,10 @@ igt_pvl_delta <- function(data     = NULL,
                      init   = genInitList, 
                      iter   = niter, 
                      chains = nchain,
-                     thin   = nthin)
+                     thin   = nthin,
+                     control = list(adapt_delta   = adapt_delta, 
+                                    max_treedepth = max_treedepth, 
+                                    stepsize      = stepsize) )
   
   ## Extract parameters
   parVals <- rstan::extract(fit, permuted=T)
@@ -273,8 +301,8 @@ igt_pvl_delta <- function(data     = NULL,
                             "subjID")
   
   # Wrap up data into a list
-  modelData        <- list(modelName, allIndPars, parVals, fit)
-  names(modelData) <- c("model", "allIndPars","parVals","fit") 
+  modelData        <- list(modelName, allIndPars, parVals, fit, rawdata)
+  names(modelData) <- c("model", "allIndPars", "parVals", "fit", "rawdata") 
   class(modelData) <- "hBayesDM"
   
   # Total time of computations
@@ -304,4 +332,3 @@ igt_pvl_delta <- function(data     = NULL,
   
   return(modelData)
 }
-
