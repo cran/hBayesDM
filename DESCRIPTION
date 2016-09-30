@@ -1,7 +1,7 @@
 Package: hBayesDM
 Title: Hierarchical Bayesian Modeling of Decision-Making Tasks
-Version: 0.2.3
-Date: 2016-07-16
+Version: 0.2.3.1
+Date: 2016-09-29
 Authors@R: c(
 	person("Woo-Young", "Ahn", email = "ahn.280@osu.edu", role = c("aut", "cre")),
 	person("Nate", "Haines", email = "haines.175@osu.edu", role = c("aut")),
@@ -17,7 +17,7 @@ Author: Woo-Young Ahn [aut, cre],
 	Lei Zhang [aut]
 RoxygenNote: 5.0.1
 NeedsCompilation: no
-Packaged: 2016-07-17 02:08:43 UTC; wahn
+Packaged: 2016-09-30 01:46:15 UTC; wahn
 Maintainer: Woo-Young Ahn <ahn.280@osu.edu>
 Repository: CRAN
-Date/Publication: 2016-07-17 14:03:11
+Date/Publication: 2016-09-30 08:30:18

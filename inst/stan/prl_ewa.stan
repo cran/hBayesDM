@@ -25,7 +25,7 @@ transformed parameters {
   # Transform subject-level raw parameters 
   vector<lower=0,upper=1>[N] phi;
   vector<lower=0,upper=1>[N] rho;
-  vector<lower=-10,upper=10>[N] beta;
+  vector<lower=0,upper=10>[N] beta;
         
   for (i in 1:N) {
     phi[i]  = Phi_approx( mu_p[1] + sigma[1] * phi_pr[i] );
