@@ -7,7 +7,7 @@ data {
 }
 transformed data {
   vector[2] init;
-  init  = rep_vector(0.0, 2);
+  init = rep_vector(0.0, 2);
 }
 parameters {
 # Declare all parameters as vectors for vectorizing
@@ -23,8 +23,8 @@ parameters {
 
 transformed parameters {
   # Transform subject-level raw parameters 
-  vector<lower=0,upper=1>[N] phi;
-  vector<lower=0,upper=1>[N] rho;
+  vector<lower=0,upper=1>[N]  phi;
+  vector<lower=0,upper=1>[N]  rho;
   vector<lower=0,upper=10>[N] beta;
         
   for (i in 1:N) {
@@ -73,9 +73,9 @@ model {
 
 generated quantities {
   # For group level parameters 
-  real<lower=0,upper=1> mu_phi;
-  real<lower=0,upper=1> mu_rho;
-  real<lower=-10,upper=10> mu_beta;
+  real<lower=0,upper=1>  mu_phi;
+  real<lower=0,upper=1>  mu_rho;
+  real<lower=0,upper=10> mu_beta;
   
   # For log likelihood calculation
   real log_lik[N];

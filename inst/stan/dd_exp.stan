@@ -1,12 +1,12 @@
 data {
-    int<lower=1> N;
-    int<lower=1> T;
-    int<lower=1, upper=T> Tsubj[N];
-    real<lower=0> delay_later[N,T];
-    real<lower=0> amount_later[N,T];
-    real<lower=0> delay_sooner[N,T];
-    real<lower=0> amount_sooner[N,T];
-    int<lower=0,upper=1> choice[N, T]; # 0 for instant reward, 1 for delayed reward
+  int<lower=1> N;
+  int<lower=1> T;
+  int<lower=1, upper=T> Tsubj[N];
+  real<lower=0> delay_later[N,T];
+  real<lower=0> amount_later[N,T];
+  real<lower=0> delay_sooner[N,T];
+  real<lower=0> amount_sooner[N,T];
+  int<lower=0,upper=1> choice[N, T]; # 0 for instant reward, 1 for delayed reward
 }
 transformed data {
 }

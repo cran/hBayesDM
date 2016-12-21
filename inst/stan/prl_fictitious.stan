@@ -1,13 +1,13 @@
 data {
-    int<lower=1> N;
-    int<lower=1> T;
-    int<lower=1,upper=T> Tsubj[N];
-    int<lower=1,upper=2> choice[N, T];
-    real rewlos[N, T];
+  int<lower=1> N;
+  int<lower=1> T;
+  int<lower=1,upper=T> Tsubj[N];
+  int<lower=1,upper=2> choice[N, T];
+  real rewlos[N, T];
 }
 transformed data {
-    vector[2] initV;
-    initV  = rep_vector(0.0, 2);
+  vector[2] initV;
+  initV = rep_vector(0.0, 2);
 }
 parameters {
 # Declare all parameters as vectors for vectorizing
@@ -28,9 +28,9 @@ transformed parameters {
   vector<lower=0,upper=5>[N] beta;
         
   for (i in 1:N) {
-    eta[i]    = Phi_approx( mu_p[1] + sigma[1] * eta_pr[i] );
-    alpha[i]  = Phi_approx( mu_p[2] + sigma[2] * alpha_pr[i] );
-    beta[i]   = Phi_approx( mu_p[3] + sigma[3] * beta_pr[i] ) * 5;
+    eta[i]   = Phi_approx( mu_p[1] + sigma[1] * eta_pr[i] );
+    alpha[i] = Phi_approx( mu_p[2] + sigma[2] * alpha_pr[i] );
+    beta[i]  = Phi_approx( mu_p[3] + sigma[3] * beta_pr[i] ) * 5;
   }
 }
 

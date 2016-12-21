@@ -51,7 +51,7 @@ dd_cs(data = "choose", niter = 3000, nwarmup = 1000, nchain = 1,
 }
 }
 \description{
-Hierarchical Bayesian Modeling of the Delay Discounting Task using the following parameters: "r" (exponential discounting rate), "s" (impatience), "beta" (inverse temp.).
+Hierarchical Bayesian Modeling of the Delay Discounting Task using the following parameters: "r" (exponential discounting rate; impatience), "s" (time-sensitivity), "beta" (inverse temp.).
 
 \strong{MODEL:}
 Constant-Sensitivity (CS) Model (Ebert & Prelec, 2007, Management Science)

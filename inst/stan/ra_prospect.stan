@@ -22,16 +22,16 @@ transformed parameters {
   vector<lower=0>[N] tau;
      
   for (i in 1:N) {
-    rho[i]     = 2 * Phi_approx( mu_p[1] + sigma[1] * rho_p[i] );
-    lambda[i]  = 5 * Phi_approx( mu_p[2] + sigma[2] * lambda_p[i] );
-    tau[i]     = 5 * Phi_approx( mu_p[3] + sigma[3] * tau_p[i] );
+    rho[i]    = Phi_approx( mu_p[1] + sigma[1] * rho_p[i] ) * 2;
+    lambda[i] = Phi_approx( mu_p[2] + sigma[2] * lambda_p[i] ) * 5; 
   }
+  tau = exp( mu_p[3] + sigma[3] * tau_p );
 }
 model {
   # ra_prospect: Original model in Soko-Hessner et al 2009 PNAS
   # hyper parameters
   mu_p  ~ normal(0, 1.0); 
-  sigma ~ cauchy(0, 5);
+  sigma ~ cauchy(0, 5.0);
   
   # individual parameters w/ Matt trick
   rho_p    ~ normal(0, 1.0);   
@@ -54,14 +54,14 @@ model {
 }
 
 generated quantities {
-  real<lower=0, upper=2> mu_rho;
-  real<lower=0, upper=5> mu_lambda;
-  real<lower=0, upper=5> mu_tau;
+  real<lower=0,upper=2> mu_rho;
+  real<lower=0,upper=5> mu_lambda;
+  real<lower=0>         mu_tau;
   real log_lik[N];
 
-  mu_rho    = 2 * Phi(mu_p[1]);
-  mu_lambda = 5 * Phi(mu_p[2]);
-  mu_tau    = 5 * Phi(mu_p[3]);
+  mu_rho    = Phi_approx(mu_p[1]) * 2;
+  mu_lambda = Phi_approx(mu_p[2]) * 5;
+  mu_tau    = exp(mu_p[3]);
 
   { # local section, this saves time and space
     for (i in 1:N) {

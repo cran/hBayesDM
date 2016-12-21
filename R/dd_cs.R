@@ -1,7 +1,7 @@
 #' Delay Discounting Task
 #' 
 #' @description 
-#' Hierarchical Bayesian Modeling of the Delay Discounting Task using the following parameters: "r" (exponential discounting rate), "s" (impatience), "beta" (inverse temp.).
+#' Hierarchical Bayesian Modeling of the Delay Discounting Task using the following parameters: "r" (exponential discounting rate; impatience), "s" (time-sensitivity), "beta" (inverse temp.).
 #' 
 #' \strong{MODEL:}
 #' Constant-Sensitivity (CS) Model (Ebert & Prelec, 2007, Management Science)
@@ -137,10 +137,17 @@ dd_cs <- function(data          = "choose",
   
   # Load data
   if (file.exists(data)) {
-    rawdata <- read.table( data, header = T )
+    rawdata <- read.table( data, header = T, sep="\t")
   } else {
     stop("** The data file does not exist. Please check it again. **\n  e.g., data = '/MyFolder/SubFolder/dataFile.txt', ... **\n")
   }  
+  # Remove rows containing NAs
+  NA_rows_all = which(is.na(rawdata), arr.ind = T)  # rows with NAs
+  NA_rows = unique(NA_rows_all[, "row"])
+  if (length(NA_rows) > 0) {
+    rawdata = rawdata[-NA_rows, ]
+    cat("The number of rows with NAs=", length(NA_rows), ". They are removed prior to modeling the data. \n", sep="")
+  }
 
   # To see how long computations take
   startTime <- Sys.time()    

@@ -1,3 +1,8 @@
+Dec 21, 2016 (0.2.3.2)
+1. Change
+  * Use wide normal distributions for unbounded parameters (gng_* models).
+  * Automatic removal of rows (trials) containing NAs. 
+
 Sep 29, 2016 (0.2.3.1)
 1. Change
   * Add a function for plotting individual parameters (plotInd) 

@@ -31,14 +31,14 @@ parameters {
 }
 transformed parameters {
   # Transform subject-level raw parameters 
-  real<lower=0, upper=20> alpha[N]; 
-  real<lower=0, upper=10> Beta[N];   
-  real<lower=0, upper=10> tau[N];  
+  real<lower=0,upper=20> alpha[N]; 
+  real<lower=0,upper=10> Beta[N];   
+  real<lower=0,upper=10> tau[N];  
 
   for (i in 1:N) {
-    alpha[i] = 20 * Phi_approx( mu_p[1] + sigma[1] * alpha_pr[i] );
-    Beta[i]  = 10 * Phi_approx( mu_p[2] + sigma[2]  * Beta_pr[i] );
-    tau[i]   = 10 * Phi_approx( mu_p[3] + sigma[3]   * tau_pr[i] );
+    alpha[i] = Phi_approx( mu_p[1] + sigma[1] * alpha_pr[i] ) * 20;
+    Beta[i]  = Phi_approx( mu_p[2] + sigma[2]  * Beta_pr[i] ) * 10;
+    tau[i]   = Phi_approx( mu_p[3] + sigma[3]   * tau_pr[i] ) * 10;
   }
 }
 model {

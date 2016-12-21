@@ -41,7 +41,12 @@ transformed parameters{
 model {  
 # gng_m4: RW(rew/pun) + noise + bias + pi model (M5 in Cavanagh et al 2013 J Neuro)
   # hyper parameters
-  mu_p  ~ normal(0, 1.0); 
+  mu_p[1]  ~ normal(0, 1.0); 
+  mu_p[2]  ~ normal(0, 1.0); 
+  mu_p[3]  ~ normal(0, 10.0); 
+  mu_p[4]  ~ normal(0, 10.0); 
+  mu_p[5]  ~ normal(0, 1.0);
+  mu_p[6]  ~ normal(0, 1.0); 
   sigma ~ cauchy(0, 5.0);
   
   # individual parameters w/ Matt trick

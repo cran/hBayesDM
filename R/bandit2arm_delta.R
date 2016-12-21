@@ -96,9 +96,15 @@
 #' @examples 
 #' \dontrun{
 #' # Run the model and store results in "output"
-#' output <- bandit2arm_delta("example", 2000, 1000, 3, 3)
+#' output <- bandit2arm_delta(data = "example", niter = 2000, nwarmup = 1000, nchain = 3, ncore = 3)
 #' 
-#' # Plot the posterior distributions of the hyper-parameters
+#' # Visually check convergence of the sampling chains (should like like 'hairy caterpillars')
+#' plot(output, type = 'trace')
+#' 
+#' # Check Rhat values (all Rhat values should be less than or equal to 1.1)
+#' rhat(output)
+#' 
+#' # Plot the posterior distributions of the hyper-parameters (distributions should be unimodal)
 #' plot(output)
 #' 
 #' # Show the WAIC and LOOIC model fit estimates 
@@ -136,11 +142,18 @@ bandit2arm_delta <- function(data          = "choose",
   
   # Load data
   if (file.exists(data)) {
-    rawdata <- read.table( data, header = T )
+    rawdata <- read.table( data, header = T, sep="\t")
   } else {
     stop("** The data file does not exist. Please check it again. **\n  e.g., data = '/MyFolder/SubFolder/dataFile.txt', ... **\n")
   }  
-  
+  # Remove rows containing NAs
+  NA_rows_all = which(is.na(rawdata), arr.ind = T)  # rows with NAs
+  NA_rows = unique(NA_rows_all[, "row"])
+  if (length(NA_rows) > 0) {
+    rawdata = rawdata[-NA_rows, ]
+    cat("The number of rows with NAs=", length(NA_rows), ". They are removed prior to modeling the data. \n", sep="")
+  }
+
   # To see how long computations take
   startTime <- Sys.time()    
   

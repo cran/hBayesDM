@@ -36,7 +36,10 @@ transformed parameters{
 model {  
 # gng_m2: RW + noise + bias model in Guitart-Masip et al 2012
   # hyper parameters
-  mu_p  ~ normal(0, 1.0); 
+  mu_p[1]  ~ normal(0, 1.0); 
+  mu_p[2]  ~ normal(0, 1.0); 
+  mu_p[3]  ~ normal(0, 10.0); 
+  mu_p[4]  ~ normal(0, 1.0); 
   sigma ~ cauchy(0, 5.0);
   
   # individual parameters w/ Matt trick

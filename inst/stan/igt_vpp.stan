@@ -27,9 +27,9 @@ parameters {
 }
 transformed parameters {
   # Transform subject-level raw parameters
-  vector<lower=0, upper=1>[N] A;
-  vector<lower=0, upper=2>[N] alpha;
-  vector<lower=0, upper=5>[N] cons;
+  vector<lower=0, upper=1>[N]  A;
+  vector<lower=0, upper=2>[N]  alpha;
+  vector<lower=0, upper=5>[N]  cons;
   vector<lower=0, upper=10>[N] lambda;
   vector[N] epP;
   vector[N] epN;
@@ -49,7 +49,14 @@ transformed parameters {
 }
 model {
   # Hyperparameters
-  mu_p  ~ normal(0, 1);
+  mu_p[1]  ~ normal(0, 1.0); 
+  mu_p[2]  ~ normal(0, 1.0); 
+  mu_p[3]  ~ normal(0, 1.0); 
+  mu_p[4]  ~ normal(0, 1.0); 
+  mu_p[5]  ~ normal(0, 10.0);
+  mu_p[6]  ~ normal(0, 10.0); 
+  mu_p[7]  ~ normal(0, 1.0); 
+  mu_p[8]  ~ normal(0, 1.0); 
   sigma ~ cauchy(0, 5);
   
   # individual parameters
@@ -100,9 +107,9 @@ model {
 
 generated quantities {
   # For group level parameters
-  real<lower=0,upper=1> mu_A;
-  real<lower=0,upper=2> mu_alpha;
-  real<lower=0,upper=5> mu_cons;
+  real<lower=0,upper=1>  mu_A;
+  real<lower=0,upper=2>  mu_alpha;
+  real<lower=0,upper=5>  mu_cons;
   real<lower=0,upper=10> mu_lambda;
   real mu_epP;
   real mu_epN;

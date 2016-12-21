@@ -42,8 +42,8 @@ model {
   
   for (i in 1:N) {
     # Define values
-    real f;    # Inernal norm
-    real PE;   # prediction error
+    real f;    # Internal norm
+    real PE;   # Prediction error
     real util; # Utility of offer
     
     # Initialize values

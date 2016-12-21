@@ -1,14 +1,14 @@
 data {
-    int<lower=1> N;
-    int<lower=1> T;
-    int<lower=1,upper=T> Tsubj[N];
-    real rewlos[N, T];
-    int ydata[N, T];
+  int<lower=1> N;
+  int<lower=1> T;
+  int<lower=1,upper=T> Tsubj[N];
+  real rewlos[N, T];
+  int ydata[N, T];
 }
 
 transformed data {
-    vector[4] initV;
-    initV  = rep_vector(0.0,4);
+  vector[4] initV;
+  initV  = rep_vector(0.0,4);
 }
 
 parameters {
@@ -26,9 +26,9 @@ parameters {
 
 transformed parameters {
   # Transform subject-level raw parameters 
-  vector<lower=0,upper=1>[N] A;
-  vector<lower=0,upper=2>[N] alpha;
-  vector<lower=0,upper=5>[N] cons;
+  vector<lower=0,upper=1>[N]  A;
+  vector<lower=0,upper=2>[N]  alpha;
+  vector<lower=0,upper=5>[N]  cons;
   vector<lower=0,upper=10>[N] lambda;
     
   for (i in 1:N) {
@@ -78,9 +78,9 @@ model {
 
 generated quantities {
   # For group level parameters
-  real<lower=0,upper=1> mu_A;
-  real<lower=0,upper=2> mu_alpha;
-  real<lower=0,upper=5> mu_cons;
+  real<lower=0,upper=1>  mu_A;
+  real<lower=0,upper=2>  mu_alpha;
+  real<lower=0,upper=5>  mu_cons;
   real<lower=0,upper=10> mu_lambda;
   
   # For log likelihood calculation
