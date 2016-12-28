@@ -1,7 +1,7 @@
 Package: hBayesDM
 Title: Hierarchical Bayesian Modeling of Decision-Making Tasks
-Version: 0.2.3.2
-Date: 2016-12-21
+Version: 0.2.3.3
+Date: 2016-12-28
 Authors@R: c(
 	person("Woo-Young", "Ahn", email = "ahn.280@osu.edu", role = c("aut", "cre")),
 	person("Nate", "Haines", email = "haines.175@osu.edu", role = c("aut")),
@@ -9,7 +9,7 @@ Authors@R: c(
 Description: Fit an array of decision-making tasks with computational models in a hierarchical Bayesian framework. Can perform hierarchical Bayesian analysis of various computational models with a single line of coding. 
 Depends: rstan, loo, R (>= 3.2.0)
 Imports: grid, parallel, mail, modeest, ggplot2
-URL: http://u.osu.edu/ccsl/codedata/hbayesdm/
+URL: http://rpubs.com/CCSL/hBayesDM
 License: GPL-3
 LazyData: true
 Author: Woo-Young Ahn [aut, cre],
@@ -17,7 +17,7 @@ Author: Woo-Young Ahn [aut, cre],
 	Lei Zhang [aut]
 RoxygenNote: 5.0.1
 NeedsCompilation: no
-Packaged: 2016-12-21 01:26:45 UTC; wahn
+Packaged: 2016-12-28 03:19:19 UTC; wahn
 Maintainer: Woo-Young Ahn <ahn.280@osu.edu>
 Repository: CRAN
-Date/Publication: 2016-12-21 17:02:10
+Date/Publication: 2016-12-28 16:31:14

@@ -1,3 +1,9 @@
+Dec 28, 2016 (0.2.3.3)
+1. Change
+  * Add help files
+  * Add a function for checking Rhat values (rhat). 
+  * Change a link to its tutorial website
+
 Dec 21, 2016 (0.2.3.2)
 1. Change
   * Use wide normal distributions for unbounded parameters (gng_* models).

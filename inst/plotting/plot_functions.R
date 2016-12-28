@@ -101,15 +101,6 @@ plot_ra_prospect <- function( obj, fontSize = 10, ncols = 3, binSize = 30 ) {
   return(h_all)
 }
 
-plot_ra_prospect <- function( obj, fontSize = 10, ncols = 3, binSize = 30 ) {
-  pars = obj$parVals
-  h1 = plotDist(sample = pars$mu_rho, fontSize = fontSize, binSize = binSize, xLab = expression(paste(rho, " (Risk Aversion)")))
-  h2 = plotDist(sample = pars$mu_lambda, fontSize = fontSize, binSize = binSize, xLab = expression(paste(lambda, " (Loss Aversion)")))
-  h3 = plotDist(sample = pars$mu_tau, fontSize = fontSize, binSize = binSize, xLab = expression(paste(tau, " (Inverse Temp.)")))
-  h_all = multiplot(h1, h2, h3, cols = ncols)
-  return(h_all)
-}
-
 plot_bandit2arm_delta <- function( obj, fontSize = 10, ncols = 2, binSize = 30 ) {
   pars = obj$parVals
   h1 = plotDist(sample = pars$mu_A, fontSize = fontSize, binSize = binSize, xLim = c(0, 1), xLab = "A (Learning Rate)")
@@ -181,9 +172,9 @@ plot_ug_bayes <- function( obj, fontSize = 10, ncols = 3, binSize = 30 ) {
 
 plot_ug_delta <- function( obj, fontSize = 10, ncols = 3, binSize = 30 ) {
   pars = obj$parVals
-  h1 = plotDist(sample = pars$mu_ep, fontSize = fontSize, binSize = binSize, xLim = c(0,1), xLab = expression(paste(epsilon, " (Norm Adapt. Rate)")))
-  h2 = plotDist(sample = pars$mu_tau, fontSize = fontSize, binSize = binSize, xLab = expression(paste(tau, " (Inverse Temp.)")) )
-  h3 = plotDist(sample = pars$mu_alpha, fontSize = fontSize, binSize = binSize, xLab = expression(paste(alpha, " (Envy)")))
+  h1 = plotDist(sample = pars$mu_alpha, fontSize = fontSize, binSize = binSize, xLab = expression(paste(alpha, " (Envy)")))
+  h2 = plotDist(sample = pars$mu_ep, fontSize = fontSize, binSize = binSize, xLim = c(0,1), xLab = expression(paste(epsilon, " (Norm Adapt. Rate)")))
+  h3 = plotDist(sample = pars$mu_tau, fontSize = fontSize, binSize = binSize, xLab = expression(paste(tau, " (Inverse Temp.)")) )
   h_all = multiplot(h1, h2, h3, cols = ncols)
   return(h_all)
 }

@@ -103,9 +103,15 @@ more information on the functioning of the sampler control parameters. One can a
 \examples{
 \dontrun{
 # Run the model and store results in "output"
-output <- dd_exp("example", 2000, 1000, 3, 3)
+output <- dd_exp(data = "example", niter = 2000, nwarmup = 1000, nchain = 3, ncore = 3)
 
-# Plot the posterior distributions of the hyper-parameters
+# Visually check convergence of the sampling chains (should like like 'hairy caterpillars')
+plot(output, type = 'trace')
+
+# Check Rhat values (all Rhat values should be less than or equal to 1.1)
+rhat(output)
+
+# Plot the posterior distributions of the hyper-parameters (distributions should be unimodal)
 plot(output)
 
 # Show the WAIC and LOOIC model fit estimates 
