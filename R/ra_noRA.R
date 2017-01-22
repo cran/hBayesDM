@@ -116,7 +116,7 @@
 ra_noRA <- function(data          = "choose",
                     niter         = 4000, 
                     nwarmup       = 1000, 
-                    nchain        = 1,
+                    nchain        = 4,
                     ncore         = 1, 
                     nthin         = 1,
                     inits         = "random",  
@@ -124,7 +124,7 @@ ra_noRA <- function(data          = "choose",
                     saveDir       = NULL,
                     email         = NULL,
                     modelRegressor= FALSE,
-                    adapt_delta   = 0.8,
+                    adapt_delta   = 0.95,
                     stepsize      = 1,
                     max_treedepth = 10 ) {
 
@@ -132,7 +132,7 @@ ra_noRA <- function(data          = "choose",
   if (modelRegressor) { # model regressors (for model-based neuroimaging, etc.)
     stop("** Model-based regressors are not available for this model **\n")
   } else {
-    modelPath <- system.file("stan", "ra_noRA.stan", package="hBayesDM")
+    modelPath <- system.file("exec", "ra_noRA.stan", package="hBayesDM")
   }
   
   # To see how long computations take
@@ -247,7 +247,6 @@ ra_noRA <- function(data          = "choose",
     genInitList <- "random"
   }
   
-  rstan::rstan_options(auto_write = TRUE)
   if (ncore > 1) {
     numCores <- parallel::detectCores()
     if (numCores < ncore) {
@@ -260,12 +259,13 @@ ra_noRA <- function(data          = "choose",
     options(mc.cores = 1)
   }
   
-  cat("************************************\n")
-  cat("** Building a model. Please wait. **\n")
-  cat("************************************\n")
+  cat("***********************************\n")
+  cat("**  Loading a precompiled model  **\n")
+  cat("***********************************\n")
   
   # Fit the Stan model
-  fit <- rstan::stan(file   = modelPath, 
+  m = stanmodels$ra_noRA
+  fit <- rstan::sampling(m, 
                      data   = dataList, 
                      pars   = POI,
                      warmup = nwarmup,
