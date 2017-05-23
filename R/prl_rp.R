@@ -33,9 +33,8 @@
 #' }
 #' 
 #' @importFrom rstan stan rstan_options extract
-#' @importFrom modeest mlv
 #' @importFrom mail sendmail
-#' @importFrom stats median qnorm
+#' @importFrom stats median qnorm density
 #' @importFrom utils read.table
 #'
 #' @details 
@@ -43,7 +42,7 @@
 #' 
 #' \strong{data} should be assigned a character value specifying the full path and name of the file, including the file extension 
 #' (e.g. ".txt"), that contains the behavioral data of all subjects of interest for the current analysis. 
-#' The file should be a text (.txt) file whose rows represent trial-by-trial observations and columns 
+#' The file should be a \strong{tab-delimited} text (.txt) file whose rows represent trial-by-trial observations and columns 
 #' represent variables. For the Probabilistic Reversal Learning Task, there should be three columns of data 
 #' with the labels "subjID", "choice", and "outcome". It is not necessary for the columns to be in this particular order, 
 #' however it is necessary that they be labelled correctly and contain the information below:
@@ -108,26 +107,26 @@
 #' printFit(output)
 #' }
 
-prl_rp <- function(data          = "choose",
-                   niter         = 3000, 
-                   nwarmup       = 1000, 
-                   nchain        = 4,
-                   ncore         = 1, 
-                   nthin         = 1,
-                   inits         = "random",  
-                   indPars       = "mean", 
-                   saveDir       = NULL,
-                   email         = NULL,
-                   modelRegressor= FALSE,
-                   adapt_delta   = 0.95,
-                   stepsize      = 1,
-                   max_treedepth = 10 ) {
+prl_rp <- function(data           = "choice",
+                   niter          = 3000, 
+                   nwarmup        = 1000, 
+                   nchain         = 1,
+                   ncore          = 1, 
+                   nthin          = 1,
+                   inits          = "random",  
+                   indPars        = "mean", 
+                   saveDir        = NULL,
+                   email          = NULL,
+                   modelRegressor = FALSE,
+                   adapt_delta    = 0.95,
+                   stepsize       = 1,
+                   max_treedepth  = 10 ) {
 
   # Path to .stan model file
   if (modelRegressor) { # model regressors (for model-based neuroimaging, etc.)
     stop("** Model-based regressors are not available for this model **\n")
   } else {
-    modelPath <- system.file("exec", "prl_rp.stan", package="hBayesDM")
+    modelPath <- system.file("stan", "prl_rp.stan", package="hBayesDM")
   }
   
   # To see how long computations take
@@ -194,15 +193,15 @@ prl_rp <- function(data          = "choose",
   # Information for user continued
   cat(" # of (max) trials per subject = ", maxTrials, "\n\n")
 
-  choice <- array(1, c(numSubjs, maxTrials) )
-  rewlos <- array(0, c(numSubjs, maxTrials) )
+  choice  <- array(1, c(numSubjs, maxTrials) )
+  outcome <- array(0, c(numSubjs, maxTrials) )
 
   for (i in 1:numSubjs) {
     curSubj      <- subjList[i]
     useTrials    <- Tsubj[i]
     tmp          <- subset(rawdata, rawdata$subjID == curSubj)
     choice[i, 1:useTrials] <- tmp$choice
-    rewlos[i, 1:useTrials] <- ifelse(tmp$outcome > 0, 1, 0)
+    outcome[i, 1:useTrials] <- sign(tmp$outcome)  # use sign
   }
   
   dataList <- list(
@@ -210,7 +209,7 @@ prl_rp <- function(data          = "choose",
     T       = maxTrials,
     Tsubj   = Tsubj,
     choice  = choice,
-    rewlos  = rewlos,
+    outcome = outcome,
     numPars = numPars
   )
   
@@ -237,7 +236,7 @@ prl_rp <- function(data          = "choose",
   } else {
     genInitList <- "random"
   }
-    
+  rstan::rstan_options(auto_write = TRUE)  
   if (ncore > 1) {
     numCores <- parallel::detectCores()
     if (numCores < ncore){
@@ -252,20 +251,22 @@ prl_rp <- function(data          = "choose",
     options(mc.cores = 1)
   }
   
-  cat("***********************************\n")
-  cat("**  Loading a precompiled model  **\n")
-  cat("***********************************\n")
+  cat("************************************\n")
+  cat("** Building a model. Please wait. **\n")
+  cat("************************************\n")
   
   # Fit the Stan model
-  m = stanmodels$prl_rp
-  fit <- rstan::sampling(m,
+  fit <- rstan::stan(file   = modelPath, 
                      data   = dataList, 
                      pars   = POI,
                      warmup = nwarmup,
                      init   = genInitList, 
                      iter   = niter, 
                      chains = nchain,
-                     thin   = nthin)
+                     thin   = nthin,
+                     control = list(adapt_delta   = adapt_delta, 
+                                    max_treedepth = max_treedepth, 
+                                    stepsize      = stepsize) )
   
   ## Extract parameters
   parVals <- rstan::extract(fit, permuted=T)
@@ -288,9 +289,9 @@ prl_rp <- function(data          = "choose",
                             median(Arew[, i]), 
                             median(beta[, i]) )
     } else if (indPars=="mode") {
-      allIndPars[i, ] <- c( as.numeric(modeest::mlv(Apun[, i], method="shorth")[1]),
-                            as.numeric(modeest::mlv(Arew[, i], method="shorth")[1]),
-                            as.numeric(modeest::mlv(beta[, i], method="shorth")[1]) )
+      allIndPars[i, ] <- c( estimate_mode(Apun[, i]),
+                            estimate_mode(Arew[, i]),
+                            estimate_mode(beta[, i]) )
     }
   }
   
@@ -301,10 +302,10 @@ prl_rp <- function(data          = "choose",
                             "subjID")
 
   # Wrap up data into a list
-  modelData        <- list(modelName, allIndPars, parVals, fit)
-  names(modelData) <- c("model", "allIndPars", "parVals", "fit")
+  modelData        <- list(modelName, allIndPars, parVals, fit, rawdata)
+  names(modelData) <- c("model", "allIndPars", "parVals", "fit", "rawdata")
   class(modelData) <- "hBayesDM"
-
+  
   # Total time of computations
   endTime  <- Sys.time()
   timeTook <- endTime - startTime
@@ -317,7 +318,8 @@ prl_rp <- function(data          = "choose",
     currHr    <- substr(currTime, 12, 13)
     currMin   <- substr(currTime, 15, 16)
     timeStamp <- paste0(currDate, "_", currHr, "_", currMin)
-    save(modelData, file=file.path(saveDir, paste0(modelName, "_", timeStamp, ".RData"  ) ) )
+    dataFileName = sub(pattern = "(.*)\\..*$", replacement = "\\1", basename(data))
+    save(modelData, file=file.path(saveDir, paste0(modelName, "_", dataFileName, "_", timeStamp, ".RData"  ) ) )
   }
   
   # Send email to notify user of completion

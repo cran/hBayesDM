@@ -6,7 +6,7 @@
 #' \strong{MODEL:}
 #' Prospect Valence Learning (PVL) Decay-RI (Ahn et al., 2014, Frontiers in Psychology)
 #' 
-#' @param data A .txt file containing the data to be modeled. Data columns should be labelled as follows: "subjID", "deck", "gain", and "loss". See \bold{Details} below for more information.
+#' @param data A .txt file containing the data to be modeled. Data columns should be labelled as follows: "subjID", "choice", "gain", and "loss". See \bold{Details} below for more information.
 #' @param niter Number of iterations, including warm-up.
 #' @param nwarmup Number of iterations used for warm-up only.
 #' @param nchain Number of chains to be run.
@@ -34,9 +34,8 @@
 #' }
 #' 
 #' @importFrom rstan stan rstan_options extract
-#' @importFrom modeest mlv
 #' @importFrom mail sendmail
-#' @importFrom stats median qnorm
+#' @importFrom stats median qnorm density
 #' @importFrom utils read.table
 #' 
 #' @details 
@@ -44,13 +43,13 @@
 #' 
 #' \strong{data} should be assigned a character value specifying the full path and name of the file, including the file extension 
 #' (e.g. ".txt"), that contains the behavioral data of all subjects of interest for the current analysis. 
-#' The file should be a text (.txt) file whose rows represent trial-by-trial observations and columns 
+#' The file should be a \strong{tab-delimited} text (.txt) file whose rows represent trial-by-trial observations and columns 
 #' represent variables. For the Iowa Gambling Task, there should be four columns of data with the labels 
-#' "subjID", "deck", "gain", and "loss". It is not necessary for the columns to be in this particular order, 
+#' "subjID", "choice", "gain", and "loss". It is not necessary for the columns to be in this particular order, 
 #' however it is necessary that they be labelled correctly and contain the information below:
 #' \describe{
 #'  \item{\code{"subjID"}}{A unique identifier for each subject within data-set to be analyzed.}
-#'  \item{\code{"deck"}}{A nominal integer representing which deck was chosen within the given trial (e.g. A, B, C, or D == 1, 2, 3, or 4 in the IGT).}
+#'  \item{\code{"choice"}}{A nominal integer representing which deck was chosen within the given trial (e.g. A, B, C, or D == 1, 2, 3, or 4 in the IGT).}
 #'  \item{\code{"gain"}}{A floating number representing the amount of currency won on the given trial (e.g. 50, 50, 100).}
 #'  \item{\code{"loss"}}{A floating number representing the amount of currency lost on the given trial (e.g. 0, -50).}
 #' } 
@@ -131,7 +130,7 @@ igt_pvl_decay <- function(data          = "choose",
   if (modelRegressor) { # model regressors (for model-based neuroimaging, etc.)
     stop("** Model-based regressors are not available for this model **\n")
   } else {
-    modelPath <- system.file("exec", "igt_pvl_decay.stan", package="hBayesDM")
+    modelPath <- system.file("stan", "igt_pvl_decay.stan", package="hBayesDM")
   }
   
   # To see how long computations take
@@ -209,17 +208,17 @@ igt_pvl_decay <- function(data          = "choose",
     RLmatrix[subjIdx, 1:useTrials] <- rawdata_curSubj[, "gain"] -1 * abs( rawdata_curSubj[ , "loss" ])
   
     for ( tIdx in 1:useTrials ) {
-      Y_t                     <- rawdata_curSubj[ tIdx, "deck" ] # chosen Y on trial "t"
+      Y_t                     <- rawdata_curSubj[ tIdx, "choice" ] # chosen Y on trial "t"
       Ydata[ subjIdx , tIdx ] <- Y_t
     }
   }
   
   dataList <- list(
-     N      = numSubjs,
-     T      = maxTrials,
-     Tsubj  = Tsubj ,
-     rewlos = RLmatrix / payscale ,
-     ydata  = Ydata
+     N       = numSubjs,
+     T       = maxTrials,
+     Tsubj   = Tsubj ,
+     outcome = RLmatrix / payscale ,
+     choice  = Ydata
   )
   
   # inits
@@ -246,7 +245,7 @@ igt_pvl_decay <- function(data          = "choose",
   } else {
     genInitList <- "random"
   }
-  
+  rstan::rstan_options(auto_write = TRUE)
   # For parallel computing if using multi-cores
   if (ncore > 1) {
     numCores <- parallel::detectCores()
@@ -260,17 +259,16 @@ igt_pvl_decay <- function(data          = "choose",
     options(mc.cores = 1)
   }
   
-  cat("***********************************\n")
-  cat("**  Loading a precompiled model  **\n")
-  cat("***********************************\n")
+  cat("************************************\n")
+  cat("** Building a model. Please wait. **\n")
+  cat("************************************\n")
   
   # Fit the Stan model
-  m = stanmodels$igt_pvl_decay
-  fit <- rstan::sampling(m, 
+  fit <- rstan::stan(file   = modelPath, 
                      data   = dataList, 
                      pars   = POI,
                      warmup = nwarmup,
-                     init   = genInitList,
+                     init   = genInitList, 
                      iter   = niter, 
                      chains = nchain,
                      thin   = nthin,
@@ -302,10 +300,10 @@ igt_pvl_decay <- function(data          = "choose",
                             median(cons[, i]), 
                             median(lambda[, i]) )
     } else if (indPars=="mode") {
-      allIndPars[i, ] <- c( as.numeric(modeest::mlv(A[, i], method="shorth")[1]),
-                            as.numeric(modeest::mlv(alpha[, i], method="shorth")[1]),
-                            as.numeric(modeest::mlv(cons[, i], method="shorth")[1]),
-                            as.numeric(modeest::mlv(lambda[, i], method="shorth")[1]) )
+      allIndPars[i, ] <- c( estimate_mode(A[, i]),
+                            estimate_mode(alpha[, i]),
+                            estimate_mode(cons[, i]),
+                            estimate_mode(lambda[, i]) )
     }
   }
   allIndPars           <- cbind(allIndPars, subjList)
@@ -317,12 +315,12 @@ igt_pvl_decay <- function(data          = "choose",
   
   # Wrap up data into a list
   modelData        <- list(modelName, allIndPars, parVals, fit, rawdata)
-  names(modelData) <- c("model", "allIndPars","parVals","fit", "rawdata")   
+  names(modelData) <- c("model", "allIndPars", "parVals", "fit", "rawdata")
   class(modelData) <- "hBayesDM"
   
   # Total time of computations
-  endTime <- Sys.time()
-  timeTook <- endTime - startTime  # time took to run the code
+  endTime  <- Sys.time()
+  timeTook <- endTime - startTime
   
   # If saveDir is specified, save modelData as a file. If not, don't save
   # Save each file with its model name and time stamp (date & time (hr & min))
@@ -332,7 +330,8 @@ igt_pvl_decay <- function(data          = "choose",
     currHr    <- substr(currTime, 12, 13)
     currMin   <- substr(currTime, 15, 16)
     timeStamp <- paste0(currDate, "_", currHr, "_", currMin)
-    save(modelData, file=file.path(saveDir, paste0(modelName, "_", timeStamp, ".RData"  ) ) )
+    dataFileName = sub(pattern = "(.*)\\..*$", replacement = "\\1", basename(data))
+    save(modelData, file=file.path(saveDir, paste0(modelName, "_", dataFileName, "_", timeStamp, ".RData"  ) ) )
   }
   
   # Send email to notify user of completion
@@ -345,5 +344,5 @@ igt_pvl_decay <- function(data          = "choose",
   cat("**** Model fitting is complete! ****\n")
   cat("************************************\n")
   
-  return(modelData)
+  on.exit(return(modelData))
 }

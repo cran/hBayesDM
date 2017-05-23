@@ -33,9 +33,8 @@
 #' }
 #' 
 #' @importFrom rstan stan rstan_options extract
-#' @importFrom modeest mlv
 #' @importFrom mail sendmail
-#' @importFrom stats median qnorm
+#' @importFrom stats median qnorm density
 #' @importFrom utils read.table
 #'
 #' @details 
@@ -43,7 +42,7 @@
 #' 
 #' \strong{data} should be assigned a character value specifying the full path and name of the file, including the file extension 
 #' (e.g. ".txt"), that contains the behavioral data of all subjects of interest for the current analysis. 
-#' The file should be a text (.txt) file whose rows represent trial-by-trial observations and columns 
+#' The file should be a \strong{tab-delimited} text (.txt) file whose rows represent trial-by-trial observations and columns 
 #' represent variables. For the Delay Discounting Task, there should be six columns of data 
 #' with the labels "subjID", "delay_later", "amount_later", "delay_sooner", "amount_sooner", and "choice". 
 #' It is not necessary for the columns to be in this particular order, however it is necessary that they be labelled 
@@ -130,8 +129,11 @@ dd_exp <- function(data          = "choose",
   if (modelRegressor) { # model regressors (for model-based neuroimaging, etc.)
     stop("** Model-based regressors are not available for this model **\n")
   } else {
-    modelPath <- system.file("exec", "dd_exp.stan", package="hBayesDM")
+    modelPath <- system.file("stan", "dd_exp.stan", package="hBayesDM")
   }
+  
+  # To see how long computations take
+  startTime <- Sys.time()    
   
   # For using example data
   if (data=="example") {
@@ -154,9 +156,6 @@ dd_exp <- function(data          = "choose",
     cat("The number of rows with NAs=", length(NA_rows), ". They are removed prior to modeling the data. \n", sep="")
   } 
 
-  # To see how long computations take
-  startTime <- Sys.time()    
-  
   # Individual Subjects
   subjList <- unique(rawdata[,"subjID"])  # list of subjects x blocks
   numSubjs <- length(subjList)  # number of subjects
@@ -247,7 +246,7 @@ dd_exp <- function(data          = "choose",
   } else {
     genInitList <- "random"
   }
-    
+  rstan::rstan_options(auto_write = TRUE)  
   if (ncore > 1) {
     numCores <- parallel::detectCores()
     if (numCores < ncore){
@@ -262,13 +261,12 @@ dd_exp <- function(data          = "choose",
     options(mc.cores = 1)
   }
   
-  cat("***********************************\n")
-  cat("**  Loading a precompiled model  **\n")
-  cat("***********************************\n")
+  cat("************************************\n")
+  cat("** Building a model. Please wait. **\n")
+  cat("************************************\n")
   
   # Fit the Stan model
-  m = stanmodels$dd_exp
-  fit <- rstan::sampling(m,
+  fit <- rstan::stan(file   = modelPath, 
                      data   = dataList, 
                      pars   = POI,
                      warmup = nwarmup,
@@ -298,8 +296,8 @@ dd_exp <- function(data          = "choose",
       allIndPars[i, ] <- c( median(r[, i]), 
                             median(beta[, i]) )
     } else if (indPars=="mode") {
-      allIndPars[i, ] <- c( as.numeric(modeest::mlv(r[, i], method="shorth")[1]),
-                            as.numeric(modeest::mlv(beta[, i], method="shorth")[1]) )
+      allIndPars[i, ] <- c( estimate_mode(r[, i]),
+                            estimate_mode(beta[, i]) )
     }
   }
   
@@ -325,7 +323,8 @@ dd_exp <- function(data          = "choose",
     currHr    <- substr(currTime, 12, 13)
     currMin   <- substr(currTime, 15, 16)
     timeStamp <- paste0(currDate, "_", currHr, "_", currMin)
-    save(modelData, file=file.path(saveDir, paste0(modelName, "_", timeStamp, ".RData"  ) ) )
+    dataFileName = sub(pattern = "(.*)\\..*$", replacement = "\\1", basename(data))
+    save(modelData, file=file.path(saveDir, paste0(modelName, "_", dataFileName, "_", timeStamp, ".RData"  ) ) )
   }
   
   # Send email to notify user of completion

@@ -1,34 +1,3 @@
-Jan 20, 2017 (0.3.0)
-- Made several changes following the guidelines for R packages providing interfaces to Stan. 
-- Stan models are precompiled and models will run immediately when called. 
-- The default number of chains is set to 4. 
-- The default value of `adapt_delta` is set to 0.95 to reduce the potential for divergences.
-- The “printFit” function uses LOOIC by default. Users can select WAIC or both (LOOIC & WAIC) if needed. 
-
-Dec 28, 2016 (0.2.3.3)
-1. Change
-  * Add help files
-  * Add a function for checking Rhat values (rhat). 
-  * Change a link to its tutorial website
-
-Dec 21, 2016 (0.2.3.2)
-1. Change
-  * Use wide normal distributions for unbounded parameters (gng_* models).
-  * Automatic removal of rows (trials) containing NAs. 
-
-Sep 29, 2016 (0.2.3.1)
-1. Change
-  * Add a function for plotting individual parameters (plotInd) 
-
-Sat July 16 2016 (0.2.3)
-1. Change
-  * Add a new task: the Ultimatum Game
-  * Add new models for the Probabilistic Reversal Learning and Risk Aversion tasks
-  * ‘bandit2arm’ -> change its name to ‘bandit2arm_delta’. Now all model names are in the same format (i.e., TASK_MODEL).
-  * Users can extract model-based regressors from gng_m* models
-  * Include the option of customizing control parameters (adapt_delta, max_treedepth, stepsize)
-  * ‘plotHDI’ function -> add ‘fontSize’ argument & change the color of histogram
-
 Sat Apr 02 2016 (0.2.1)
 1. Bug fixes 
   * All models: Fix errors when indPars=“mode”

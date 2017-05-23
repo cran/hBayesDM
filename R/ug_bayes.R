@@ -33,9 +33,8 @@
 #' }
 #' 
 #' @importFrom rstan stan rstan_options extract
-#' @importFrom modeest mlv
 #' @importFrom mail sendmail
-#' @importFrom stats median qnorm
+#' @importFrom stats median qnorm density
 #' @importFrom utils read.table
 #'
 #' @details 
@@ -43,7 +42,7 @@
 #' 
 #' \strong{data} should be assigned a character value specifying the full path and name of the file, including the file extension 
 #' (e.g. ".txt"), that contains the behavioral data of all subjects of interest for the current analysis. 
-#' The file should be a text (.txt) file whose rows represent trial-by-trial observations and columns 
+#' The file should be a \strong{tab-delimited} text (.txt) file whose rows represent trial-by-trial observations and columns 
 #' represent variables. For the Norm-Training Ultimatum Game, there should be three columns of data 
 #' with the labels "subjID", "offer", and "accept". It is not necessary for the columns to be in this particular order, 
 #' however it is necessary that they be labelled correctly and contain the information below:
@@ -108,26 +107,26 @@
 #' printFit(output)
 #' }
 
-ug_bayes <- function(data          = "choose",
-                     niter         = 3000, 
-                     nwarmup       = 1000, 
-                     nchain        = 4,
-                     ncore         = 1, 
-                     nthin         = 1,
-                     inits         = "random",  
-                     indPars       = "mean", 
-                     saveDir       = NULL,
-                     email         = NULL,
-                     modelRegressor= FALSE,
-                     adapt_delta   = 0.95,
-                     stepsize      = 1,
-                     max_treedepth = 10 ) {
+ug_bayes <- function(data           = "choose",
+                     niter          = 3000, 
+                     nwarmup        = 1000, 
+                     nchain         = 4,
+                     ncore          = 1, 
+                     nthin          = 1,
+                     inits          = "random",  
+                     indPars        = "mean", 
+                     saveDir        = NULL,
+                     email          = NULL,
+                     modelRegressor = FALSE,
+                     adapt_delta    = 0.95,
+                     stepsize       = 1,
+                     max_treedepth  = 10 ) {
 
   # Path to .stan model file
   if (modelRegressor) { # model regressors (for model-based neuroimaging, etc.)
     stop("** Model-based regressors are not available for this model **\n")
   } else {
-    modelPath <- system.file("exec", "ug_bayes.stan", package="hBayesDM")
+    modelPath <- system.file("stan", "ug_bayes.stan", package="hBayesDM")
   }
   
   # To see how long computations take
@@ -235,7 +234,7 @@ ug_bayes <- function(data          = "choose",
   } else {
     genInitList <- "random"
   }
-    
+  rstan::rstan_options(auto_write = TRUE) 
   if (ncore > 1) {
     numCores <- parallel::detectCores()
     if (numCores < ncore){
@@ -250,13 +249,12 @@ ug_bayes <- function(data          = "choose",
     options(mc.cores = 1)
   }
   
-  cat("***********************************\n")
-  cat("**  Loading a precompiled model  **\n")
-  cat("***********************************\n")
+  cat("************************************\n")
+  cat("** Building a model. Please wait. **\n")
+  cat("************************************\n")
   
   # Fit the Stan model
-  m = stanmodels$ug_bayes
-  fit <- rstan::sampling(m,
+  fit <- rstan::stan(file   = modelPath, 
                      data   = dataList, 
                      pars   = POI,
                      warmup = nwarmup,
@@ -289,9 +287,9 @@ ug_bayes <- function(data          = "choose",
                             median(Beta[, i]), 
                             median(tau[, i]) )
     } else if (indPars=="mode") {
-      allIndPars[i, ] <- c( as.numeric(modeest::mlv(alpha[, i], method="shorth")[1]),
-                            as.numeric(modeest::mlv(Beta[, i], method="shorth")[1]),
-                            as.numeric(modeest::mlv(tau[, i], method="shorth")[1]) )
+      allIndPars[i, ] <- c( estimate_mode(alpha[, i]),
+                            estimate_mode(Beta[, i]),
+                            estimate_mode(tau[, i]) )
     }
   }
   

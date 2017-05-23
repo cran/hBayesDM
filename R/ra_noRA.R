@@ -33,9 +33,8 @@
 #' }
 #' 
 #' @importFrom rstan stan rstan_options extract
-#' @importFrom modeest mlv
 #' @importFrom mail sendmail
-#' @importFrom stats median qnorm
+#' @importFrom stats median qnorm density
 #' @importFrom utils read.table
 #'
 #' @details 
@@ -43,7 +42,7 @@
 #' 
 #' \strong{data} should be assigned a character value specifying the full path and name of the file, including the file extension 
 #' (e.g. ".txt"), that contains the behavioral data of all subjects of interest for the current analysis. 
-#' The file should be a text (.txt) file whose rows represent trial-by-trial observations and columns 
+#' The file should be a \strong{tab-delimited} text (.txt) file whose rows represent trial-by-trial observations and columns 
 #' represent variables. For the Risk Aversion Task, there should be four columns of data  with the labels 
 #' "subjID", "riskyGain", "riskyLoss", and "safeOption". It is not necessary for the columns to be in this 
 #' particular order, however it is necessary that they be labelled correctly and contain the information below:
@@ -113,26 +112,26 @@
 #' path_to_regulate_data=system.file("extdata/ra_data_reappraisal.txt", package="hBayesDM")
 #' }
 
-ra_noRA <- function(data          = "choose",
-                    niter         = 4000, 
-                    nwarmup       = 1000, 
-                    nchain        = 4,
-                    ncore         = 1, 
-                    nthin         = 1,
-                    inits         = "random",  
-                    indPars       = "mean", 
-                    saveDir       = NULL,
-                    email         = NULL,
-                    modelRegressor= FALSE,
-                    adapt_delta   = 0.95,
-                    stepsize      = 1,
-                    max_treedepth = 10 ) {
+ra_noRA <- function(data           = "choose",
+                    niter          = 4000, 
+                    nwarmup        = 1000, 
+                    nchain         = 4,
+                    ncore          = 1, 
+                    nthin          = 1,
+                    inits          = "random",  
+                    indPars        = "mean", 
+                    saveDir        = NULL,
+                    email          = NULL,
+                    modelRegressor = FALSE,
+                    adapt_delta    = 0.95,
+                    stepsize       = 1,
+                    max_treedepth  = 10 ) {
 
   # Path to .stan model file
   if (modelRegressor) { # model regressors (for model-based neuroimaging, etc.)
     stop("** Model-based regressors are not available for this model **\n")
   } else {
-    modelPath <- system.file("exec", "ra_noRA.stan", package="hBayesDM")
+    modelPath <- system.file("stan", "ra_noRA.stan", package="hBayesDM")
   }
   
   # To see how long computations take
@@ -246,7 +245,7 @@ ra_noRA <- function(data          = "choose",
   } else {
     genInitList <- "random"
   }
-  
+  rstan::rstan_options(auto_write = TRUE)
   if (ncore > 1) {
     numCores <- parallel::detectCores()
     if (numCores < ncore) {
@@ -259,13 +258,12 @@ ra_noRA <- function(data          = "choose",
     options(mc.cores = 1)
   }
   
-  cat("***********************************\n")
-  cat("**  Loading a precompiled model  **\n")
-  cat("***********************************\n")
+  cat("************************************\n")
+  cat("** Building a model. Please wait. **\n")
+  cat("************************************\n")
   
   # Fit the Stan model
-  m = stanmodels$ra_noRA
-  fit <- rstan::sampling(m, 
+  fit <- rstan::stan(file   = modelPath, 
                      data   = dataList, 
                      pars   = POI,
                      warmup = nwarmup,
@@ -295,8 +293,8 @@ ra_noRA <- function(data          = "choose",
       allIndPars[i, ] <- c( median(lambda[, i]), 
                             median(tau[, i]) )
     } else if (indPars=="mode") {
-      allIndPars[i, ] <- c( as.numeric(modeest::mlv(lambda[, i], method="shorth")[1]), 
-                            as.numeric(modeest::mlv(tau[, i], method="shorth")[1]) )
+      allIndPars[i, ] <- c( estimate_mode(lambda[, i]), 
+                            estimate_mode(tau[, i]) )
     }   
   }  
   
