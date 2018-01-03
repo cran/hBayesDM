@@ -1,21 +1,21 @@
-#' Iowa Gambling Task (Ahn et al., 2008)
+#' Peer influence task (Chung et al., 2015 Nature Neuroscience)
 #' 
 #' @description 
-#' Hierarchical Bayesian Modeling of the Iowa Gambling Task using the following parameters: "A" (learning rate), "alpha" (outcome sensitivity), "cons" (response consistency), and "lambda" (loss aversion).
+#' Hierarchical Bayesian Modeling of the Peer Influence Task with the following parameters: "rho" (risk preference), "tau" (inverse temperature), and "ocu" (other-conferred utility).\cr\cr
+#' Contributor: Harhim Park (https://ccs-lab.github.io/team/harhim-park/)
 #' 
 #' \strong{MODEL:}
-#' Prospect Valence Learning (PVL) Delta (Ahn et al., 2008, Cognitive Science)
+#' Peer influence task - OCU (other-conferred utility) model
 #' 
-#' @param data A .txt file containing the data to be modeled. Data columns should be labelled as follows: "subjID", "choice", "gain", and "loss". See \bold{Details} below for more information.
+#' @param data A .txt file containing the data to be modeled. Data columns should be labelled as follows: "subjID", "gain", "loss", "cert", and "gamble". See \bold{Details} below for more information. 
 #' @param niter Number of iterations, including warm-up.
 #' @param nwarmup Number of iterations used for warm-up only.
 #' @param nchain Number of chains to be run.
 #' @param ncore Integer value specifying how many CPUs to run the MCMC sampling on. Defaults to 1. 
-#' @param nthin Every \code{i == nthin} sample will be used to generate the posterior distribution. Defaults to 1. A higher number can be used when auto-correlation within the MCMC sampling is high. 
+#' @param nthin Every \code{i == nthin} sample will be used to generate the posterior distribution. Defaults to 1. A higher number can be used when auto-correlation within the MCMC sampling is high.
 #' @param inits Character value specifying how the initial values should be generated. Options are "fixed" or "random" or your own initial values.
 #' @param indPars Character value specifying how to summarize individual parameters. Current options are: "mean", "median", or "mode".
 #' @param saveDir Path to directory where .RData file of model output (\code{modelData}) can be saved. Leave blank if not interested.
-#' @param payscale Raw payoffs within data are divided by this number. Used for scaling data. Defaults to 100
 #' @param modelRegressor Exporting model-based regressors? TRUE or FALSE. Currently not available for this model.
 #' @param vb             Use variational inference to approximately draw from a posterior distribution. Defaults to FALSE.
 #' @param inc_postpred Include trial-level posterior predictive simulations in model output (may greatly increase file size). Defaults to FALSE.
@@ -25,7 +25,7 @@
 #'  
 #' @return \code{modelData}  A class \code{"hBayesDM"} object with the following components:
 #' \describe{
-#'  \item{\code{model}}{Character string with the name of the model ("igt_pvl_delta").}
+#'  \item{\code{model}}{Character string with the name of the model (\code{"ra_prospect"}).}
 #'  \item{\code{allIndPars}}{\code{"data.frame"} containing the summarized parameter 
 #'    values (as specified by \code{"indPars"}) for each subject.}
 #'  \item{\code{parVals}}{A \code{"list"} where each element contains posterior samples
@@ -38,26 +38,30 @@
 #' @importFrom parallel detectCores
 #' @importFrom stats median qnorm density
 #' @importFrom utils read.table
-#' 
+#'
 #' @details 
 #' This section describes some of the function arguments in greater detail.
 #' 
 #' \strong{data} should be assigned a character value specifying the full path and name of the file, including the file extension 
 #' (e.g. ".txt"), that contains the behavioral data of all subjects of interest for the current analysis. 
 #' The file should be a \strong{tab-delimited} text (.txt) file whose rows represent trial-by-trial observations and columns 
-#' represent variables. For the Iowa Gambling Task, there should be four columns of data with the labels 
-#' "subjID", "choice", "gain", and "loss". It is not necessary for the columns to be in this particular order, 
-#' however it is necessary that they be labelled correctly and contain the information below:
+#' represent variables. For the Risk Aversion Task, there should be four columns of data  with the labels 
+#' "subjID", "condition", "p_gamble", "safe_Hpayoff", "safe_Lpayoff", "risky_Hpayoff", "risky_Lpayoff", "choice". It is not necessary for the columns to be in this 
+#' particular order, however it is necessary that they be labelled correctly and contain the information below:
 #' \describe{
 #'  \item{\code{"subjID"}}{A unique identifier for each subject within data-set to be analyzed.}
-#'  \item{\code{"choice"}}{A nominal integer representing which deck was chosen within the given trial (e.g. A, B, C, or D == 1, 2, 3, or 4 in the IGT).}
-#'  \item{\code{"gain"}}{A floating number representing the amount of currency won on the given trial (e.g. 50, 50, 100).}
-#'  \item{\code{"loss"}}{A floating number representing the amount of currency lost on the given trial (e.g. 0, -50).}
+#'  \item{\code{"condition"}}{0: solo, 1: info (safe/safe), 2: info (mix), 3: info (risky/risky)}
+#'  \item{\code{"p_gamble"}}{Probability of receiving a high payoff (same for both options)}
+#'  \item{\code{"safe_Hpayoff"}}{High payoff of the safe option}
+#'  \item{\code{"safe_Lpayoff"}}{Low payoff of the safe option}
+#'  \item{\code{"risky_Hpayoff"}}{High payoff of the risky option}
+#'  \item{\code{"risky_Lpayoff"}}{Low payoff of the risky option}
+#'  \item{\code{"choice"}}{Which option was chosen? 0: safe 1: risky}
 #' } 
 #' \strong{*}Note: The data.txt file may contain other columns of data (e.g. "Reaction_Time", "trial_number", etc.), but only the data with the column
 #' names listed above will be used for analysis/modeling. As long as the columns above are present and labelled correctly,
 #' there is no need to remove other miscellaneous data columns.    
-#' 
+#'  
 #' \strong{nwarmup} is a numerical value that specifies how many MCMC samples should not be stored upon the 
 #' beginning of each chain. For those familiar with Bayesian methods, this value is equivalent to a burn-in sample. 
 #' Due to the nature of MCMC sampling, initial values (where the sampling chain begins) can have a heavy influence 
@@ -83,11 +87,8 @@
 #' @export 
 #' 
 #' @references 
-#' Ahn, W. Y., Busemeyer, J. R., & Wagenmakers, E. J. (2008). Comparison of decision learning models using the generalization 
-#' criterion method. Cognitive Science, 32(8), 1376-1402. http://doi.org/10.1080/03640210802352992
-#' 
-#' Hoffman, M. D., & Gelman, A. (2014). The No-U-turn sampler: adaptively setting path lengths in Hamiltonian Monte Carlo. The 
-#' Journal of Machine Learning Research, 15(1), 1593-1623.
+#' Chung, D., Christopoulos, G. I., King-Casas, B., Ball, S. B., & Chiu, P. H. (2015). Social signals of safety and risk confer utility and have asymmetric effects on observers' choices. 
+#' Nature neuroscience, 18(6), 912-916.
 #' 
 #' @seealso 
 #' We refer users to our in-depth tutorial for an example of using hBayesDM: \url{https://rpubs.com/CCSL/hBayesDM}
@@ -95,7 +96,7 @@
 #' @examples 
 #' \dontrun{
 #' # Run the model and store results in "output"
-#' output <- igt_pvl_delta(data = "example", niter = 2000, nwarmup = 1000, nchain = 3, ncore = 3)
+#' output <- peer_ocu(data = "example", niter = 2000, nwarmup = 1000, nchain = 3, ncore = 3)
 #' 
 #' # Visually check convergence of the sampling chains (should like like 'hairy caterpillars')
 #' plot(output, type = 'trace')
@@ -108,38 +109,39 @@
 #' 
 #' # Show the WAIC and LOOIC model fit estimates 
 #' printFit(output)
+#' 
+#' 
 #' }
 
-igt_pvl_delta <- function(data           = "choose",
-                          niter          = 3000, 
-                          nwarmup        = 1000,
-                          nchain         = 4,
-                          ncore          = 1, 
-                          nthin          = 1,
-                          inits          = "random",
-                          indPars        = "mean", 
-                          payscale       = 100,
-                          saveDir        = NULL,
-                          modelRegressor = FALSE,
-                          vb             = FALSE,
-                          inc_postpred   = FALSE,
-                          adapt_delta    = 0.95,
-                          stepsize       = 1,
-                          max_treedepth  = 10 ) {
+peer_ocu <- function(data           = "choose",
+                     niter          = 4000, 
+                     nwarmup        = 1000, 
+                     nchain         = 4,
+                     ncore          = 1, 
+                     nthin          = 1,
+                     inits          = "fixed",  
+                     indPars        = "mean", 
+                     saveDir        = NULL,
+                     modelRegressor = FALSE,
+                     vb             = FALSE,
+                     inc_postpred   = FALSE,
+                     adapt_delta    = 0.95,
+                     stepsize       = 1,
+                     max_treedepth  = 10 ) {
   
   # Path to .stan model file
   if (modelRegressor) { # model regressors (for model-based neuroimaging, etc.)
     stop("** Model-based regressors are not available for this model **\n")
   } else {
-    modelPath <- system.file("stan", "igt_pvl_delta.stan", package="hBayesDM")
+    modelPath <- system.file("stan", "peer_ocu.stan", package="hBayesDM")
   }
   
   # To see how long computations take
-  startTime <- Sys.time()   
+  startTime <- Sys.time()    
   
   # For using example data
   if (data=="example") {
-    data <- system.file("extdata", "igt_exampleData.txt", package = "hBayesDM")
+    data <- system.file("extdata", "peer_exampleData.txt", package = "hBayesDM")
   } else if (data=="choose") {
     data <- file.choose()
   }
@@ -159,21 +161,21 @@ igt_pvl_delta <- function(data           = "choose",
   }
   
   # Individual Subjects
-  subjList <- unique(rawdata[,"subjID"])  # list of subjects x blocks
-  numSubjs <- length(subjList)  # number of subjects
+  subjList <- unique(rawdata[,"subjID"]) # list of subjects x blocks
+  numSubjs <- length(subjList)           # number of subjects
   
   # Specify the number of parameters and parameters of interest 
-  numPars <- 4
-  POI     <- c("mu_A", "mu_alpha", "mu_cons",  "mu_lambda",
-               "sigma", 
-               "A", "alpha", "cons", "lambda",
+  numPars <- 3
+  POI     <- c("mu_rho", "mu_tau", "mu_ocu",
+               "sigma",
+               "rho" , "tau", "ocu",
                "log_lik")
   
   if (inc_postpred) {
     POI <- c(POI, "y_pred")
   }
   
-  modelName <- "igt_pvl_delta"
+  modelName <- "peer_ocu"
   
   # Information for user
   cat("\nModel name = ", modelName, "\n")
@@ -188,7 +190,6 @@ igt_pvl_delta <- function(data           = "choose",
     cat(" # of burn-in samples          = ", nwarmup, "\n")
   }
   cat(" # of subjects                 = ", numSubjs, "\n")
-  cat(" # Payscale                    = ", payscale, "\n")
   
   ################################################################################
   # THE DATA.  ###################################################################
@@ -206,49 +207,60 @@ igt_pvl_delta <- function(data           = "choose",
   # Information for user continued
   cat(" # of (max) trials per subject = ", maxTrials, "\n\n")
   
-  RLmatrix <- array(0, c(numSubjs, maxTrials ) )
-  Ydata    <- array(-1, c(numSubjs, maxTrials) )
+  # for multiple subjects
+  safe_Hpayoff    <- array(0, c(numSubjs, maxTrials) )
+  safe_Lpayoff    <- array(0, c(numSubjs, maxTrials) )
+  risky_Hpayoff    <- array(0, c(numSubjs, maxTrials) )
+  risky_Lpayoff    <- array(0, c(numSubjs, maxTrials) )
+  condition    <- array(0, c(numSubjs, maxTrials))
+  p_gamble    <- array(0, c(numSubjs, maxTrials))
+  choice  <- array(-1, c(numSubjs, maxTrials))
   
-  for ( subjIdx in 1:numSubjs )   {
-    #number of trials for each subj.
-    useTrials                      <- Tsubj[subjIdx]
-    currID                         <- subjList[ subjIdx ]
-    rawdata_curSubj                <- subset( rawdata, rawdata$subjID == currID )
-    RLmatrix[subjIdx, 1:useTrials] <- rawdata_curSubj[, "gain"] -1 * abs( rawdata_curSubj[ , "loss" ])
-    
-    for ( tIdx in 1:useTrials ) {
-      Y_t                     <- rawdata_curSubj[ tIdx, "choice" ] # chosen Y on trial "t"
-      Ydata[ subjIdx , tIdx ] <- Y_t
-    }
+  for (i in 1:numSubjs) {
+    curSubj      <- subjList[i]
+    useTrials    <- Tsubj[i]
+    tmp          <- subset(rawdata, rawdata$subjID == curSubj)
+    safe_Hpayoff[i, 1:useTrials]    <- tmp[1:useTrials, "safe_Hpayoff"]
+    safe_Lpayoff[i, 1:useTrials]    <- tmp[1:useTrials, "safe_Lpayoff"]
+    risky_Hpayoff[i, 1:useTrials]    <- tmp[1:useTrials, "risky_Hpayoff"]
+    risky_Lpayoff[i, 1:useTrials]    <- tmp[1:useTrials, "risky_Lpayoff"]
+    condition[i, 1:useTrials]    <- tmp[1:useTrials, "condition"]
+    p_gamble[i, 1:useTrials]    <- tmp[1:useTrials, "p_gamble"]
+    choice[i, 1:useTrials]    <- tmp[1:useTrials, "choice"]
   }
   
   dataList <- list(
     N       = numSubjs,
     T       = maxTrials,
-    Tsubj   = Tsubj ,
-    outcome = RLmatrix / payscale ,
-    choice  = Ydata
+    Tsubj   = Tsubj,
+    numPars = numPars,
+    safe_Hpayoff    = safe_Hpayoff,
+    safe_Lpayoff    = safe_Lpayoff,
+    risky_Hpayoff    = risky_Hpayoff,
+    risky_Lpayoff    = risky_Lpayoff,
+    condition  = condition,
+    p_gamble = p_gamble,
+    choice = choice
   )
   
   # inits
   if (inits[1] != "random") {
     if (inits[1] == "fixed") {
-      inits_fixed <- c(0.5, 0.5, 1.0, 1.0)
+      inits_fixed <- c(1.0, 1.0, 0.0)
     } else {
       if (length(inits)==numPars) {
         inits_fixed <- inits
       } else {
         stop("Check your inital values!")
       }
-    } 
+    }  
     genInitList <- function() {
       list(
-        mu_p      = c( qnorm(inits_fixed[1]), qnorm(inits_fixed[2] /2), qnorm( inits_fixed[3] /5 ), qnorm( inits_fixed[4] / 10 ) ),
-        sigma     = c(1.0, 1.0, 1.0, 1.0),
-        A_pr      = rep( qnorm(inits_fixed[1]), numSubjs),
-        alpha_pr  = rep( qnorm(inits_fixed[2]/2), numSubjs),
-        cons_pr   = rep( qnorm(inits_fixed[3]/5), numSubjs),
-        lambda_pr = rep( qnorm(inits_fixed[4]/10), numSubjs)
+        mu_p     = c( qnorm( inits_fixed[1]/2 ), log( inits_fixed[2]), inits_fixed[3] ),
+        sigma    = c(1.0, 1.0, 1.0),
+        rho_p    = rep(qnorm( inits_fixed[1]/2 ), numSubjs),
+        tau_p    = rep(log( inits_fixed[2]), numSubjs,
+        ocu_p    = rep(inits_fixed[3]), numSubjs) 
       )
     }
   } else {
@@ -291,16 +303,15 @@ igt_pvl_delta <- function(data           = "choose",
                                          max_treedepth = max_treedepth, 
                                          stepsize      = stepsize) )
   }
-  ## Extract parameters
+  # Extract the Stan fit object
   parVals <- rstan::extract(fit, permuted=T)
   if (inc_postpred) {
     parVals$y_pred[parVals$y_pred==-1] <- NA
   }
   
-  A      <- parVals$A
-  alpha  <- parVals$alpha
-  cons   <- parVals$cons
-  lambda <- parVals$lambda
+  rho    <- parVals$rho
+  tau    <- parVals$tau
+  ocu    <- parVals$ocu
   
   # Individual parameters (e.g., individual posterior means)
   allIndPars <- array(NA, c(numSubjs, numPars))
@@ -308,32 +319,29 @@ igt_pvl_delta <- function(data           = "choose",
   
   for (i in 1:numSubjs) {
     if (indPars=="mean") {
-      allIndPars[i, ] <- c( mean(A[, i]), 
-                            mean(alpha[, i]), 
-                            mean(cons[, i]), 
-                            mean(lambda[, i]) )
+      allIndPars[i, ] <- c( mean(rho[, i]), 
+                            mean(tau[, i]),
+                            mean(ocu[, i]) )    
     } else if (indPars=="median") {
-      allIndPars[i, ] <- c( median(A[, i]), 
-                            median(alpha[, i]), 
-                            median(cons[, i]), 
-                            median(lambda[, i]) )
+      allIndPars[i, ] <- c( median(rho[, i]), 
+                            median(tau[, i]),
+                            median(ocu[, i]) )    
     } else if (indPars=="mode") {
-      allIndPars[i, ] <- c( estimate_mode(A[, i]),
-                            estimate_mode(alpha[, i]),
-                            estimate_mode(cons[, i]),
-                            estimate_mode(lambda[, i]) )
-    }
-  }
+      allIndPars[i, ] <- c( estimate_mode(rho[, i]), 
+                            estimate_mode(tau[, i]),
+                            estimate_mode(ocu[, i]) )    
+    }   
+  }  
+  
   allIndPars           <- cbind(allIndPars, subjList)
-  colnames(allIndPars) <- c("A", 
-                            "alpha", 
-                            "cons", 
-                            "lambda", 
+  colnames(allIndPars) <- c("rho", 
+                            "tau", 
+                            "ocu",
                             "subjID")
   
   # Wrap up data into a list
   modelData        <- list(modelName, allIndPars, parVals, fit, rawdata)
-  names(modelData) <- c("model", "allIndPars", "parVals", "fit", "rawdata")
+  names(modelData) <- c("model", "allIndPars", "parVals", "fit", "rawdata")    
   class(modelData) <- "hBayesDM"
   
   # Total time of computations

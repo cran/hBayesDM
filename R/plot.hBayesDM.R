@@ -4,10 +4,10 @@
 #' @param type Character value that specifies the plot type. Options are: "dist", "trace", or "simple". Defaults to "dist".
 #' @param ncols Integer value specifying how many plots there should be per row. Defaults to the number of parameters.
 #' @param fontSize Integer value specifying the size of the font used for plotting. Defaults to 10.
-#' @param binSize Integer value specifyin ghow wide the bars on the histogram should be. Defaults to 30.
+#' @param binSize Integer value specifying how wide the bars on the histogram should be. Defaults to 30.
 #' @param ... Additional arguments to be passed on 
 #' 
-#' @importFrom rstan traceplot
+#' @importFrom rstan traceplot summary
 #' 
 #' @method plot hBayesDM
 #' @export
@@ -36,9 +36,9 @@ plot.hBayesDM <- function(x        = NULL,   # hBayesDM model output object
     
     # Calling function for respective model
     eval(parse(text = paste0("plot_", x$model, "(obj = x",
-                                               ", fontSize = ", fontSize,
-                                               ", ncols = ", ncols, 
-                                               ", binSize = ", binSize, ")")))
+                             ", fontSize = ", fontSize,
+                             ", ncols = ", ncols, 
+                             ", binSize = ", binSize, ")")))
     invisible()
     
   } else if (type=="trace") {
@@ -47,4 +47,15 @@ plot.hBayesDM <- function(x        = NULL,   # hBayesDM model output object
   } else if (type=="simple") {                           
     rstan::plot(x$fit, pars = paste0(parNames), ...)         
   }
+  
+  # Show a warning message if variance inference was used
+  # `%notin%` <- Negate(`%in%`)  # define %notin% --> opposite of %in%
+  # summaryData <- rstan::summary(x$fit)
+  # if ("Rhat" %notin% colnames(summaryData[["summary"]])) {   # if 'Rhat' does not exist
+  #   cat("\n************************************************************************\n")
+  #   cat("Variational inference was used to approximate posterior distributions!!\n")
+  #   cat("For final inferences, we strongly recommend using MCMC sampling.\n")
+  #   cat("************************************************************************\n")
+  # }
+  
 }

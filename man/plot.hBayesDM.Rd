@@ -16,7 +16,7 @@
 
 \item{fontSize}{Integer value specifying the size of the font used for plotting. Defaults to 10.}
 
-\item{binSize}{Integer value specifyin ghow wide the bars on the histogram should be. Defaults to 30.}
+\item{binSize}{Integer value specifying how wide the bars on the histogram should be. Defaults to 30.}
 
 \item{...}{Additional arguments to be passed on}
 }

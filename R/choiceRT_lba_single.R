@@ -19,8 +19,9 @@
 #' @param inits Character value specifying how the initial values should be generated. Options are "fixed" or "random" or your own initial values.
 #' @param indPars Character value specifying how to summarize individual parameters. Current options are: "mean", "median", or "mode".
 #' @param saveDir Path to directory where .RData file of model output (\code{modelData}) can be saved. Leave blank if not interested.
-#' @param email Character value containing email address to send notification of completion. Leave blank if not interested. 
 #' @param modelRegressor Exporting model-based regressors? TRUE or FALSE. Currently not available for this model.
+#' @param vb             Use variational inference to approximately draw from a posterior distribution. Defaults to FALSE.
+#' @param inc_postpred Include trial-level posterior predictive simulations in model output (may greatly increase file size). Defaults to FALSE.
 #' @param adapt_delta Floating point number representing the target acceptance probability of a new sample in the MCMC chain. Must be between 0 and 1. See \bold{Details} below.
 #' @param stepsize Integer value specifying the size of each leapfrog step that the MCMC sampler can take on each new iteration. See \bold{Details} below.
 #' @param max_treedepth Integer value specifying how many leapfrog steps that the MCMC sampler can take on each new iteration. See \bold{Details} below.
@@ -36,9 +37,9 @@
 #'  \item{\code{rawdata}}{\code{"data.frame"} containing the raw data used to fit the model, as specified by the user.}
 #' } 
 #'
-#' @importFrom rstan stan rstan_options extract
-#' @importFrom mail sendmail
-#' @importFrom stats median qnorm
+#' @importFrom rstan vb sampling stan_model rstan_options extract
+#' @importFrom parallel detectCores
+#' @importFrom stats median qnorm density
 #' @importFrom utils read.table
 #'
 #' @details 
@@ -124,8 +125,9 @@ choiceRT_lba_single <- function(data           = "choose",
                                 inits          = "random",  
                                 indPars        = "mean", 
                                 saveDir        = NULL,
-                                email          = NULL,
                                 modelRegressor = FALSE,
+                                vb             = FALSE,
+                                inc_postpred   = FALSE,
                                 adapt_delta    = 0.95,
                                 stepsize       = 1,
                                 max_treedepth  = 10 ) {
@@ -136,7 +138,7 @@ choiceRT_lba_single <- function(data           = "choose",
   } else {
     modelPath <- system.file("stan", "choiceRT_lba_single.stan", package="hBayesDM")  
   }
-
+  
   # To see how long computations take
   startTime <- Sys.time()    
   
@@ -163,22 +165,30 @@ choiceRT_lba_single <- function(data           = "choose",
   POI     <- c("d", "A", "v", "tau", 
                "log_lik")
   
+  if (inc_postpred) {
+    POI <- c(POI, "y_pred")
+  }
+  
   # Boundary (d): Reparameterization of decision boundary, where boundary = d + A
   # Starting point (A): Upper boundary on starting point uniform distribution
   # Drift rate (v): Drift rate Quality of the stimulus (delta close to 0 means ambiguous stimulus or weak ability). 0 < delta
   # Nondecision Time (tau): Nondecision time + Motor response time + encoding time (high means slow encoding, execution). 0 < ter (in seconds)
   
   modelName <- "choiceRT_lba_single"
-
+  
   # Information for user
   cat("\nModel name = ", modelName, "\n")
   cat("Data file  = ", data, "\n")
   cat("\nDetails:\n")
-  cat(" # of chains                       = ", nchain, "\n")
-  cat(" # of cores used                   = ", ncore, "\n")
-  cat(" # of MCMC samples (per chain)     = ", niter, "\n")
-  cat(" # of burn-in samples              = ", nwarmup, "\n")
-  cat(" # of subjects                     = ", numSubjs, "\n")
+  if (vb) {
+    cat(" # Using variational inference # \n")
+  } else {
+    cat(" # of chains                   = ", nchain, "\n")
+    cat(" # of cores used               = ", ncore, "\n")
+    cat(" # of MCMC samples (per chain) = ", niter, "\n")
+    cat(" # of burn-in samples          = ", nwarmup, "\n")
+  }
+  cat(" # of subjects                 = ", numSubjs, "\n")
   
   ################################################################################
   # THE DATA.  ###################################################################
@@ -186,7 +196,7 @@ choiceRT_lba_single <- function(data           = "choose",
   
   # Setting number trial/subject 
   Tsubj = dim(rawdata)[1]
-
+  
   # Information for user continued
   cat(" # of (max) trials of this subject = ", Tsubj, "\n\n")
   
@@ -206,7 +216,7 @@ choiceRT_lba_single <- function(data           = "choose",
   max_tr <- max(n_tr_cond)
   
   # Array for storing RT + choice data
-  RT <- array(0, dim = c(num_cond, 2, max_tr))
+  RT <- array(-1, dim = c(num_cond, 2, max_tr))
   
   # Reaction time + choice matrix
   for (cond in 1:num_cond) {
@@ -220,7 +230,7 @@ choiceRT_lba_single <- function(data           = "choose",
       RT[cond, 2, 1:tmp_trials] <- tmp$choice
     }
   }
-
+  
   dataList <- list(
     N_tr_cond = n_tr_cond,
     N_choices = num_choices,
@@ -271,25 +281,35 @@ choiceRT_lba_single <- function(data           = "choose",
   cat("************************************\n")
   
   # Fit the Stan model
-  fit <- rstan::stan(file   = modelPath, 
-                     data   = dataList, 
-                     pars   = POI,
-                     warmup = nwarmup,
-                     init   = genInitList, 
-                     iter   = niter, 
-                     chains = nchain,
-                     thin   = nthin,
-                     control = list(adapt_delta   = adapt_delta, 
-                                    max_treedepth = max_treedepth, 
-                                    stepsize      = stepsize) )
-  
+  m = rstan::stan_model(modelPath)
+  if (vb) {   # if variational Bayesian
+    fit = rstan::vb(m, 
+                    data   = dataList, 
+                    pars   = POI,
+                    init   = genInitList)
+  } else {
+    fit = rstan::sampling(m, 
+                          data   = dataList, 
+                          pars   = POI,
+                          warmup = nwarmup,
+                          init   = genInitList, 
+                          iter   = niter, 
+                          chains = nchain,
+                          thin   = nthin,
+                          control = list(adapt_delta   = adapt_delta, 
+                                         max_treedepth = max_treedepth, 
+                                         stepsize      = stepsize) )
+  }
   parVals <- rstan::extract(fit, permuted=T)
+  if (inc_postpred) {
+    parVals$y_pred[parVals$y_pred==-1] <- NA
+  }
   
   d   <- parVals$d
   A   <- parVals$A
   v   <- parVals$v
   tau <- parVals$tau
-                 
+  
   if (indPars=="mean") {
     allIndPars <- c( mean(d),
                      mean(A),
@@ -306,7 +326,7 @@ choiceRT_lba_single <- function(data           = "choose",
                      as.vector(apply(v, c(2,3), estimate_mode)),
                      estimate_mode(tau) )
   }
-
+  
   allIndPars           <- t(as.data.frame(allIndPars))
   allIndPars           <- as.data.frame(allIndPars)
   allIndPars$subjID    <- subjID
@@ -323,7 +343,7 @@ choiceRT_lba_single <- function(data           = "choose",
   modelData        <- list(modelName, allIndPars, parVals, fit, rawdata)
   names(modelData) <- c("model", "allIndPars", "parVals", "fit", "rawdata")
   class(modelData) <- "hBayesDM"
-
+  
   # Total time of computations
   endTime  <- Sys.time()
   timeTook <- endTime - startTime
@@ -340,11 +360,6 @@ choiceRT_lba_single <- function(data           = "choose",
     save(modelData, file=file.path(saveDir, paste0(modelName, "_", dataFileName, "_", timeStamp, ".RData"  ) ) )
   }
   
-  # Send email to notify user of completion
-  if (is.null(email)==F) {
-    mail::sendmail(email, paste("model=", modelName, ", fileName = ", data),
-             paste("Check ", getwd(), ". It took ", as.character.Date(timeTook), sep="") )
-  }
   # Inform user of completion
   cat("\n************************************\n")
   cat("**** Model fitting is complete! ****\n")
