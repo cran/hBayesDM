@@ -1,6 +1,6 @@
-a6e426a8b47bf9d6c99be257c9206e1b *DESCRIPTION
+5d9c06e56d15816d260e01d980533d0b *DESCRIPTION
 80fa448820ad548242e4475317609c3e *NAMESPACE
-62df584c0cfb7c717d1a60050213da6e *NEWS.md
+2e00d485b51631626632fb21da701360 *NEWS.md
 404ce22e29cba578a592b46704f7f1a4 *R/HDIofMCMC.R
 c559e3d265a7ec3cb80f3b04ebd1be64 *R/bandit2arm_delta.R
 62f455b962e208519ec97c19cd71bd22 *R/bandit4arm2_kalman_filter.R
@@ -29,7 +29,7 @@ a827da6bfcb76bf6ae47877586ba1974 *R/gng_m1.R
 da75b16c33f6fe8c2b86a534cec7cf74 *R/gng_m2.R
 b9ee13a1d71a1eeb42909085725006c7 *R/gng_m3.R
 1ae54cd612f4fe20bdea0c9fa824899e *R/gng_m4.R
-154c1e79c965712726a5dae0e1f22800 *R/hBayesDM.R
+15fa07b6b339bfa8318db78ba7c52201 *R/hBayesDM.R
 da66373fbffe2d78e36cf24ea20b21cb *R/hBayesDM_model.R
 fb2b2388783caf810b8b2469f263ccf1 *R/igt_orl.R
 6542ebf541c907a7a7d737d5ca500fe5 *R/igt_pvl_decay.R
@@ -93,7 +93,7 @@ ddceb04999d874187b400849e6b89cb4 *inst/extdata/ts_exampleData.txt
 4b3007fd76f7bf6933231856f1def562 *inst/extdata/wcs_answersheet.txt
 b4c717642c88cdc429fa7ca70cd198fb *inst/extdata/wcs_exampleData.txt
 33aa36815be42b933a83c572d81e4435 *inst/include/meta_header.hpp
-9859d7e8911106cdf781a6b4d38da474 *inst/plotting/plot_functions.R
+062bf220690534954bbad778aaee6243 *inst/plotting/plot_functions.R
 0e6cce1350046969fc78646f40e06cc9 *inst/stan_files/bandit2arm_delta.stan
 debbba8a2140d1fcc3919aece6888879 *inst/stan_files/bandit4arm2_kalman_filter.stan
 97fc9f8d627c59b2ed4ef7a5153bc502 *inst/stan_files/bandit4arm_2par_lapse.stan
@@ -172,7 +172,7 @@ c8b98394a46aae7e4d74923181406c31 *man/gng_m1.Rd
 520ce3876084adee38b84be8bdc8dbf1 *man/gng_m2.Rd
 40c2f3bf6bc4baeaffd145b92435e4e7 *man/gng_m3.Rd
 53cd897bebc81cfa9a9965d1fcc7a360 *man/gng_m4.Rd
-d778b5eadd5c2f6371d460b92c099244 *man/hBayesDM-package.Rd
+1f15bd74be4b490c9928964619a77e7d *man/hBayesDM-package.Rd
 648462175c054ff433ec28c0d84e9b36 *man/hBayesDM_model.Rd
 4510dad576fd925e0e003962ba25f0d1 *man/igt_orl.Rd
 833d4e38f08425dbf77fa38d5b5e1cc6 *man/igt_pvl_decay.Rd

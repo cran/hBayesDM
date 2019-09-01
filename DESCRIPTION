@@ -1,7 +1,7 @@
 Package: hBayesDM
 Title: Hierarchical Bayesian Modeling of Decision-Making Tasks
-Version: 1.0.0
-Date: 2019-08-30
+Version: 1.0.1
+Date: 2019-09-01
 Author: Woo-Young Ahn [aut, cre],
   Nate Haines [aut],
   Lei Zhang [aut],
@@ -55,6 +55,6 @@ Collate: 'HDIofMCMC.R' 'preprocess_funcs.R' 'stanmodels.R' 'settings.R'
         'rdt_happiness.R' 'rhat.R' 'ts_par4.R' 'ts_par6.R' 'ts_par7.R'
         'ug_bayes.R' 'ug_delta.R' 'wcs_sql.R' 'zzz.R'
 Suggests: testthat
-Packaged: 2019-08-30 08:37:46 UTC; pluvian
+Packaged: 2019-09-01 04:10:01 UTC; pluvian
 Repository: CRAN
-Date/Publication: 2019-08-30 09:00:02 UTC
+Date/Publication: 2019-09-01 14:30:14 UTC
