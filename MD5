@@ -1,7 +1,7 @@
-5d9c06e56d15816d260e01d980533d0b *DESCRIPTION
+d1626c39830c1ed6aaa3b2abda664c8b *DESCRIPTION
 80fa448820ad548242e4475317609c3e *NAMESPACE
-2e00d485b51631626632fb21da701360 *NEWS.md
-404ce22e29cba578a592b46704f7f1a4 *R/HDIofMCMC.R
+0a325b0e8fac742613012102708e07a8 *NEWS.md
+d1bae4b379a75d6495eb683737e93c59 *R/HDIofMCMC.R
 c559e3d265a7ec3cb80f3b04ebd1be64 *R/bandit2arm_delta.R
 62f455b962e208519ec97c19cd71bd22 *R/bandit4arm2_kalman_filter.R
 3275c4752a95615d941b3bef7605c0bf *R/bandit4arm_2par_lapse.R
@@ -30,7 +30,7 @@ da75b16c33f6fe8c2b86a534cec7cf74 *R/gng_m2.R
 b9ee13a1d71a1eeb42909085725006c7 *R/gng_m3.R
 1ae54cd612f4fe20bdea0c9fa824899e *R/gng_m4.R
 15fa07b6b339bfa8318db78ba7c52201 *R/hBayesDM.R
-da66373fbffe2d78e36cf24ea20b21cb *R/hBayesDM_model.R
+0830c03029158425e879b6bc80c58b74 *R/hBayesDM_model.R
 fb2b2388783caf810b8b2469f263ccf1 *R/igt_orl.R
 6542ebf541c907a7a7d737d5ca500fe5 *R/igt_pvl_decay.R
 218da717fc245e28ae2bd9e9abfdb63d *R/igt_pvl_delta.R
@@ -39,7 +39,7 @@ f375dbcf5e8ab28d4afcb2a9360f95e8 *R/multiplot.R
 dd9c950afd9ca370ec4e7eddf5606e55 *R/peer_ocu.R
 1906c28c0c9be0481c3c31f1c86b497a *R/plot.hBayesDM.R
 c9ccaa47d27487b2769b1dcf76b6297a *R/plotDist.R
-f4c39ed74de31dd55842b373c2f3539e *R/plotHDI.R
+a56b58f192f057abb8be7d9a4151cddd *R/plotHDI.R
 3fecfada0a08d04d8bfce1cebf1311e5 *R/plotInd.R
 d483001bdfd72a7ee140ca884336d270 *R/preprocess_funcs.R
 1eaf1a650dd5e428c3836225dbf310b3 *R/printFit.R
@@ -144,7 +144,7 @@ fac5f5389e762005e84fae8a71b7f5dc *inst/stan_files/ts_par4.stan
 e87f0d843b1e44a1870e98387eeb1109 *inst/stan_files/ug_bayes.stan
 ccb98c63d1edecad05e5200ddc3e04ad *inst/stan_files/ug_delta.stan
 40d355e8d9fee28d6d475cf9ea512b36 *inst/stan_files/wcs_sql.stan
-95106fb2414b44e693c456de50eaf32e *man/HDIofMCMC.Rd
+4a5db4672fc62003232cca476394d3eb *man/HDIofMCMC.Rd
 6a75974262bd99d72dfa675c38321b7e *man/bandit2arm_delta.Rd
 d5f3ad6147b9eea318568fab8f06edf2 *man/bandit4arm2_kalman_filter.Rd
 cf4781d1247ba288fb4a5f0f44426243 *man/bandit4arm_2par_lapse.Rd
@@ -182,7 +182,7 @@ db29c92107bf89d2d8e982ca6d995ad4 *man/multiplot.Rd
 be8aac98955b13e25035bba0bbd9f916 *man/peer_ocu.Rd
 4e9152af5365a14356d3443037a95e96 *man/plot.hBayesDM.Rd
 25687f7c1352ff46f23ab74942754ff1 *man/plotDist.Rd
-eaa752fc2077b6c7608dea70bf283de0 *man/plotHDI.Rd
+ca4e122e4ec26dbc9e9d65feca1627a8 *man/plotHDI.Rd
 d0d2d602f1388c18f8a2e68eb02b5f01 *man/plotInd.Rd
 332d32931863a778734e8aca1c775005 *man/printFit.Rd
 85b41aec66c77295867f01c072a7479a *man/prl_ewa.Rd
