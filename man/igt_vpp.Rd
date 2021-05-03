@@ -4,10 +4,23 @@
 \alias{igt_vpp}
 \title{Value-Plus-Perseverance}
 \usage{
-igt_vpp(data = NULL, niter = 4000, nwarmup = 1000, nchain = 4,
-  ncore = 1, nthin = 1, inits = "vb", indPars = "mean",
-  modelRegressor = FALSE, vb = FALSE, inc_postpred = FALSE,
-  adapt_delta = 0.95, stepsize = 1, max_treedepth = 10, ...)
+igt_vpp(
+  data = NULL,
+  niter = 4000,
+  nwarmup = 1000,
+  nchain = 4,
+  ncore = 1,
+  nthin = 1,
+  inits = "vb",
+  indPars = "mean",
+  modelRegressor = FALSE,
+  vb = FALSE,
+  inc_postpred = FALSE,
+  adapt_delta = 0.95,
+  stepsize = 1,
+  max_treedepth = 10,
+  ...
+)
 }
 \arguments{
 \item{data}{Data to be modeled. It should be given as a data.frame object,
@@ -141,7 +154,7 @@ For the Iowa Gambling Task, there should be 4 columns of data with the
   sampler's behavior. Refer to 'The No-U-Turn Sampler: Adaptively Setting Path Lengths in
   Hamiltonian Monte Carlo (Hoffman & Gelman, 2014, Journal of Machine Learning Research)' for
   more information on the sampler control parameters. One can also refer to 'Section 34.2. HMC
-  Algorithm Parameters' of the \href{http://mc-stan.org/users/documentation/}{Stan User's Guide
+  Algorithm Parameters' of the \href{https://mc-stan.org/users/documentation/}{Stan User's Guide
   and Reference Manual}, or to the help page for \code{\link[rstan]{stan}} for a less technical
   description of these arguments.
 }
@@ -169,9 +182,9 @@ printFit(output)
 }
 }
 \references{
-Ahn, W. Y., Busemeyer, J. R., & Wagenmakers, E. J. (2008). Comparison of decision learning models using the generalization criterion method. Cognitive Science, 32(8), 1376-1402. http://doi.org/10.1080/03640210802352992
+Ahn, W. Y., Busemeyer, J. R., & Wagenmakers, E. J. (2008). Comparison of decision learning models using the generalization criterion method. Cognitive Science, 32(8), 1376-1402. https://doi.org/10.1080/03640210802352992
 
-Worthy, D. A., & Todd Maddox, W. (2013). A comparison model of reinforcement-learning and win-stay-lose-shift decision-making processes: A tribute to W.K. Estes. Journal of Mathematical Psychology, 59, 41-49. http://doi.org/10.1016/j.jmp.2013.10.001
+Worthy, D. A., & Todd Maddox, W. (2013). A comparison model of reinforcement-learning and win-stay-lose-shift decision-making processes: A tribute to W.K. Estes. Journal of Mathematical Psychology, 59, 41-49. https://doi.org/10.1016/j.jmp.2013.10.001
 }
 \seealso{
 We refer users to our in-depth tutorial for an example of using hBayesDM:

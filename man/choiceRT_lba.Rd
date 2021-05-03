@@ -4,11 +4,23 @@
 \alias{choiceRT_lba}
 \title{Choice Reaction Time task, linear ballistic accumulator modeling}
 \usage{
-choiceRT_lba(data = "choose", niter = 3000, nwarmup = 1000,
-  nchain = 2, ncore = 2, nthin = 1, inits = "random",
-  indPars = "mean", saveDir = NULL, modelRegressor = FALSE,
-  vb = FALSE, inc_postpred = FALSE, adapt_delta = 0.95,
-  stepsize = 1, max_treedepth = 10)
+choiceRT_lba(
+  data = "choose",
+  niter = 3000,
+  nwarmup = 1000,
+  nchain = 2,
+  ncore = 2,
+  nthin = 1,
+  inits = "random",
+  indPars = "mean",
+  saveDir = NULL,
+  modelRegressor = FALSE,
+  vb = FALSE,
+  inc_postpred = FALSE,
+  adapt_delta = 0.95,
+  stepsize = 1,
+  max_treedepth = 10
+)
 }
 \arguments{
 \item{data}{A .txt file containing the data to be modeled. Data columns should be labelled as follows: "subjID", "choice", "RT", and "condition". See \bold{Details} below for more information.}
@@ -102,7 +114,7 @@ generate the posterior.
 over Stan's MCMC sampler. The Stan creators recommend that only advanced users change the default values, as alterations
 can profoundly change the sampler's behavior. Refer to Hoffman & Gelman (2014, Journal of Machine Learning Research) for
 more information on the functioning of the sampler control parameters. One can also refer to section 58.2 of the
-\href{http://mc-stan.org/documentation/}{Stan User's Manual} for a less technical description of these arguments.
+\href{https://mc-stan.org/users/documentation/}{Stan User's Manual} for a less technical description of these arguments.
 }
 \examples{
 \dontrun{
