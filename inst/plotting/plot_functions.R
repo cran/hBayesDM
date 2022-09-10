@@ -414,14 +414,47 @@ plot_pst_gainloss_Q <- function(obj, fontSize = 10, ncols = 3, binSize = 30) {
   return(h_all)
 }
 
+plot_pstRT_ddm <- function(obj, fontSize = 10, ncols = 5, binSize = 30) {
+  pars = obj$parVals
+  h1 = plotDist(sample = pars$mu_a, fontSize = fontSize, binSize = binSize, xLab = expression(paste(a, " (Boundary Separation)")))
+  h2 = plotDist(sample = pars$mu_tau, fontSize = fontSize, binSize = binSize, xLab = expression(paste(tau, " (Non-Decision Time)")))
+  h3 = plotDist(sample = pars$mu_d1, fontSize = fontSize, binSize = binSize, xLab = expression(paste(d1, " (Drift Rate 1)")))
+  h4 = plotDist(sample = pars$mu_d2, fontSize = fontSize, binSize = binSize, xLab = expression(paste(d2, " (Drift Rate 2)")))
+  h5 = plotDist(sample = pars$mu_d3, fontSize = fontSize, binSize = binSize, xLab = expression(paste(d3, " (Drift Rate 3)")))
+  h_all = multiplot(h1, h2, h3, h4, h5, cols = ncols)
+  return(h_all)
+}
+
+plot_pstRT_rlddm1 <- function(obj, fontSize = 10, ncols = 4, binSize = 30) {
+  pars = obj$parVals
+  h1 = plotDist(sample = pars$mu_a, fontSize = fontSize, binSize = binSize, xLab = expression(paste(a, " (Boundary Separation)")))
+  h2 = plotDist(sample = pars$mu_tau, fontSize = fontSize, binSize = binSize, xLab = expression(paste(tau, " (Non-Decision Time)")))
+  h3 = plotDist(sample = pars$mu_v, fontSize = fontSize, binSize = binSize, xLab = expression(paste(v, " (Drift Rate Scaling)")))
+  h4 = plotDist(sample = pars$mu_alpha, fontSize = fontSize, binSize = binSize, xLab = expression(paste(alpha, " (Learning Rate)")))
+  h_all = multiplot(h1, h2, h3, h4, cols = ncols)
+  return(h_all)
+}
+
+plot_pstRT_rlddm6 <- function(obj, fontSize = 10, ncols = 3, binSize = 30) {
+  pars = obj$parVals
+  h1 = plotDist(sample = pars$mu_a, fontSize = fontSize, binSize = binSize, xLab = expression(paste(a, " (Boundary Baseline)")))
+  h2 = plotDist(sample = pars$mu_bp, fontSize = fontSize, binSize = binSize, xLab = expression(paste(bp, " (Boundary Power)")))
+  h3 = plotDist(sample = pars$mu_tau, fontSize = fontSize, binSize = binSize, xLab = expression(paste(tau, " (Non-Decision Time)")))
+  h4 = plotDist(sample = pars$mu_v, fontSize = fontSize, binSize = binSize, xLab = expression(paste(v, " (Drift Rate Scaling)")))
+  h5 = plotDist(sample = pars$mu_alpha_pos, fontSize = fontSize, binSize = binSize, xLab = expression(paste(alpha[pos], " (+Learning Rate)")))
+  h6 = plotDist(sample = pars$mu_alpha_neg, fontSize = fontSize, binSize = binSize, xLab = expression(paste(alpha[neg], " (-Learning Rate)")))
+  h_all = multiplot(h1, h2, h3, h4, h5, h6, cols = ncols)
+  return(h_all)
+}
+
 plot_bandit4arm2_kalman_filter <- function(obj, fontSize = 10, ncols = 6, binSize = 30) {
   pars = obj$parVals
   h1 = plotDist(sample = pars$mu_lambda, fontSize = fontSize, binSize = binSize, xLab = expression(paste(lambda, " (Decay Factor)")))
   h2 = plotDist(sample = pars$mu_theta, fontSize = fontSize, binSize = binSize, xLab = expression(paste(theta, " (Decay Center)")))
   h3 = plotDist(sample = pars$mu_beta, fontSize = fontSize, binSize = binSize, xLab = expression(paste(beta, " (Inverse Temp.)")))
   h4 = plotDist(sample = pars$mu_mu0, fontSize = fontSize, binSize = binSize, xLab = expression(paste(mu0, " (Anticipated Initial Mean)")))
-  h5 = plotDist(sample = pars$mu_sigma0, fontSize = fontSize, binSize = binSize, xLab = expression(paste(sigma0, " (Anticipated Initial SD (Uncertainty))")))
-  h6 = plotDist(sample = pars$mu_sigmaD, fontSize = fontSize, binSize = binSize, xLab = expression(paste(sigmaD, " (SD of Diffusion Noise)")))
+  h5 = plotDist(sample = pars$mu_s0, fontSize = fontSize, binSize = binSize, xLab = expression(paste(s0, " (Anticipated Initial SD (Uncertainty))")))
+  h6 = plotDist(sample = pars$mu_sD, fontSize = fontSize, binSize = binSize, xLab = expression(paste(sD, " (SD of Diffusion Noise)")))
   h_all = multiplot(h1, h2, h3, h4, h5, h6, cols = ncols)
   return(h_all)
 }

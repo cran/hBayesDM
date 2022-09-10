@@ -147,6 +147,54 @@ bandit4arm_preprocess_func <- function(raw_data, general_info) {
   return(data_list)
 }
 
+banditNarm_preprocess_func <- function(raw_data, general_info, Narm=NULL) {
+  # Currently class(raw_data) == "data.table"
+
+  # Use general_info of raw_data
+  subjs   <- general_info$subjs
+  n_subj  <- general_info$n_subj
+  t_subjs <- general_info$t_subjs
+  t_max   <- general_info$t_max
+
+  # get the number of arms used
+  if (is.null(Narm)){
+    n_arm  <- length(unique(raw_data$choice))
+  }
+  else{
+    n_arm <- Narm
+  }
+
+  # Initialize (model-specific) data arrays
+  rew    <- array( 0, c(n_subj, t_max))
+  los    <- array( 0, c(n_subj, t_max))
+  choice <- array(-1, c(n_subj, t_max))
+
+  # Write from raw_data to the data arrays
+  for (i in 1:n_subj) {
+    subj <- subjs[i]
+    t <- t_subjs[i]
+    DT_subj <- raw_data[raw_data$subjid == subj]
+
+    rew[i, 1:t]    <- DT_subj$gain
+    los[i, 1:t]    <- -1 * abs(DT_subj$loss)
+    choice[i, 1:t] <- DT_subj$choice
+  }
+
+  # Wrap into a list for Stan
+  data_list <- list(
+    N      = n_subj,
+    T      = t_max,
+    Tsubj  = t_subjs,
+    rew    = rew,
+    los    = los,
+    choice = choice,
+    Narm   = n_arm
+  )
+
+  # Returned data_list will directly be passed to Stan
+  return(data_list)
+}
+
 bart_preprocess_func <- function(raw_data, general_info) {
   # Currently class(raw_data) == "data.table"
 
@@ -660,6 +708,61 @@ pst_preprocess_func <- function(raw_data, general_info) {
 
   # Returned data_list will directly be passed to Stan
   return(data_list)
+}
+
+# Make a function
+pstRT_preprocess_func <- function(raw_data, general_info, RTbound = 0.1, initQ = 0.5) {
+  # Use raw_data as a data.frame
+  raw_data <- as.data.frame(raw_data)
+
+  # Use general_info of raw_data
+  subjs   <- general_info$subjs
+  n_subj  <- general_info$n_subj
+  t_subjs <- general_info$t_subjs
+  t_max   <- general_info$t_max
+
+  # Information for each trial
+  i_subjs <- array(-1, c(n_subj, t_max))
+  cond    <- array(-1, c(n_subj, t_max))
+  choice  <- array(-1, c(n_subj, t_max))
+  RT      <- array(-1, c(n_subj, t_max))
+  fd      <- array(-1, c(n_subj, t_max))
+  for (i in 1:n_subj) {
+    subj <- subjs[i]
+    subj_data <- subset(raw_data, raw_data$subjid == subj)
+
+    i_subjs[i, 1:t_subjs[i]] <- subj_data$iter
+    cond[i, 1:t_subjs[i]]    <- subj_data$cond
+    choice[i, 1:t_subjs[i]]  <- subj_data$choice
+    RT[i, 1:t_subjs[i]]      <- subj_data$rt
+    fd[i, 1:t_subjs[i]]      <- subj_data$feedback
+  }
+
+  # Task conditions and reward probabilities
+  df_prob <- unique(raw_data[, c('cond', 'prob')])
+  df_prob <- df_prob[order(df_prob$cond), ]
+  n_cond  <- nrow(df_prob)
+  prob    <- df_prob$prob
+
+  # Minimum reaction time
+  minRT <- with(raw_data, aggregate(rt, by = list(y = subjid), FUN = min)[["x"]])
+
+  # Wrap into a list for Stan
+  data_list <- list(
+    N       = n_subj,
+    T       = t_max,
+    Tsubj   = t_subjs,
+    Isubj   = i_subjs,
+    n_cond  = n_cond,
+    cond    = cond,
+    choice  = choice,
+    RT      = RT,
+    fd      = fd,
+    initQ   = initQ,
+    minRT   = minRT,
+    RTbound = RTbound,
+    prob    = prob
+  )
 }
 
 ra_preprocess_func <- function(raw_data, general_info) {

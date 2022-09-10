@@ -4,14 +4,16 @@ data {
   int<lower=1> N;
   int<lower=1> T;
   int<lower=1, upper=T> Tsubj[N];
-  int<lower=1,upper=4> choice[N,T];
-  real<lower=1,upper=100> outcome[N,T];
+  real rew[N, T];
+  real los[N, T];
+  int choice[N, T];
+  int Narm;
 }
-
 transformed data {
   real sO; // sigma_O = 4
   sO = 4;
 }
+
 
 parameters {
   // group-level parameters
@@ -62,13 +64,13 @@ model {
 
   // subject loop and trial loop
   for (i in 1:N) {
-    vector[4] mu_ev;    // estimated mean for each option
-    vector[4] sd_ev_sq; // estimated sd^2 for each option
+    vector[Narm] mu_ev;    // estimated mean for each option
+    vector[Narm] sd_ev_sq; // estimated sd^2 for each option
     real pe;            // prediction error
     real k;             // learning rate
 
-    mu_ev    = rep_vector(mu0[i] ,4);
-    sd_ev_sq = rep_vector(s0[i]^2, 4);
+    mu_ev    = rep_vector(mu0[i] ,Narm);
+    sd_ev_sq = rep_vector(s0[i]^2, Narm);
 
     for (t in 1:(Tsubj[i])) {
       // compute action probabilities
@@ -78,7 +80,7 @@ model {
       k = sd_ev_sq[choice[i,t]] / ( sd_ev_sq[choice[i,t]] + sO^2 );
 
       // prediction error
-      pe = outcome[i,t] - mu_ev[choice[i,t]];
+      pe = (rew[i,t]+los[i,t]) - mu_ev[choice[i,t]];
 
       // value updating (learning)
       mu_ev[choice[i,t]] += k * pe;
@@ -122,14 +124,14 @@ generated quantities {
 
   { // local block
     for (i in 1:N) {
-      vector[4] mu_ev;    // estimated mean for each option
-      vector[4] sd_ev_sq; // estimated sd^2 for each option
+      vector[Narm] mu_ev;    // estimated mean for each option
+      vector[Narm] sd_ev_sq; // estimated sd^2 for each option
       real pe;            // prediction error
       real k;             // learning rate
 
       log_lik[i] = 0;
-      mu_ev    = rep_vector(mu0[i] ,4);
-      sd_ev_sq = rep_vector(s0[i]^2, 4);
+      mu_ev    = rep_vector(mu0[i] ,Narm);
+      sd_ev_sq = rep_vector(s0[i]^2, Narm);
 
 
       for (t in 1:(Tsubj[i])) {
@@ -141,7 +143,7 @@ generated quantities {
         k = sd_ev_sq[choice[i,t]] / ( sd_ev_sq[choice[i,t]] + sO^2);
 
         // prediction error
-        pe = outcome[i,t] - mu_ev[choice[i,t]];
+        pe = (rew[i,t]+los[i,t]) - mu_ev[choice[i,t]];
 
         // value updating (learning)
         mu_ev[choice[i,t]] += k * pe;
