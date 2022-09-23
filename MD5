@@ -1,6 +1,6 @@
-9a9f3cc29c8ff310f1a3b1647dbb9805 *DESCRIPTION
+65f3fecf2716451743d78f507747b9bf *DESCRIPTION
 6b3f48f385379a62061e2c9a4ae9e39b *NAMESPACE
-78912e2e43bfcf257cda5deee4b42075 *NEWS.md
+c96f4afaaf4ab41891f2853557575903 *NEWS.md
 d1bae4b379a75d6495eb683737e93c59 *R/HDIofMCMC.R
 225188552f97b65a37277fe8bc17245c *R/alt_delta.R
 8747b6b335e1424a59a771709479298e *R/alt_gamma.R
@@ -39,7 +39,7 @@ ca6e6a3c567168fe5d5347c2a3229a41 *R/extract_ic.R
 147042477bc10becc9e1851c4670d439 *R/gng_m2.R
 4f31f5bfaf18913242795c9b70aa5e30 *R/gng_m3.R
 168a94515f4bf9e5cfa71e61f712fc25 *R/gng_m4.R
-15fa07b6b339bfa8318db78ba7c52201 *R/hBayesDM.R
+1ca0ba5b6fb19de7ca06c422b3acb9cf *R/hBayesDM.R
 a8e6d992de889c3879f75c005408a4f8 *R/hBayesDM_model.R
 57cc30dc4cd7f3ef1e3b38f8150d5a77 *R/igt_orl.R
 012fc624015e5fb6810040d63cc1fc13 *R/igt_pvl_decay.R
@@ -47,7 +47,7 @@ a8e6d992de889c3879f75c005408a4f8 *R/hBayesDM_model.R
 e31e34adab49f9aa9e6b02fd77c3941a *R/igt_vpp.R
 f375dbcf5e8ab28d4afcb2a9360f95e8 *R/multiplot.R
 e6184141b8e2cfd4dd7cad58ec28c736 *R/peer_ocu.R
-1906c28c0c9be0481c3c31f1c86b497a *R/plot.hBayesDM.R
+fc229bc58341db219bafa18e47e5efa7 *R/plot.hBayesDM.R
 c9ccaa47d27487b2769b1dcf76b6297a *R/plotDist.R
 a56b58f192f057abb8be7d9a4151cddd *R/plotHDI.R
 b1dda665387b9030b541edc02a9b2df9 *R/plotInd.R
@@ -216,7 +216,7 @@ ecca14bfd20847a9d85c39303b8c72d2 *man/gng_m1.Rd
 945203b60e99be569f96d9e6181fb0b3 *man/gng_m2.Rd
 b06897e3525ab60a94e13d4a7b1d862c *man/gng_m3.Rd
 38d9cec03d54c37b91375048b5f13b72 *man/gng_m4.Rd
-1f15bd74be4b490c9928964619a77e7d *man/hBayesDM-package.Rd
+815ecdc345a7a3d0658adaa184a0989f *man/hBayesDM-package.Rd
 68f21ee26e5df0d3ac1a74aea10cafd0 *man/hBayesDM_model.Rd
 7e63d367d4ab984ac625b6c1292ed120 *man/igt_orl.Rd
 9942e4fe43bdaa41a1a30946927d2128 *man/igt_pvl_decay.Rd
@@ -224,7 +224,7 @@ b06897e3525ab60a94e13d4a7b1d862c *man/gng_m3.Rd
 3e7e57ab5ce90ef08284b1a58c06a533 *man/igt_vpp.Rd
 db29c92107bf89d2d8e982ca6d995ad4 *man/multiplot.Rd
 e8b7bb095a418b43a5e472f1ebf9418c *man/peer_ocu.Rd
-6bc3ee367e510eca57cbea69c8bed5da *man/plot.hBayesDM.Rd
+8d58a01f5703c895ee7a244f28e0fd4f *man/plot.hBayesDM.Rd
 d783bc2dd6fda1b5d94363466c7ca14f *man/plotDist.Rd
 c7329507ea38c3144feb2deff0dde079 *man/plotHDI.Rd
 d0d2d602f1388c18f8a2e68eb02b5f01 *man/plotInd.Rd
